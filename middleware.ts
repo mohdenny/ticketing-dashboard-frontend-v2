@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const isLoggedIn = request.cookies.get('auth');
   const { pathname } = request.nextUrl;
 
-  // CARA PROTEKSI LEBIH DARI SATU HALAMAN:
+  // PROTEKSI LEBIH DARI SATU HALAMAN:
   // Gunakan operator "||" (ATAU) untuk menambah daftar halaman yang diproteksi.
   // Contoh: const isProtectedRoute = request.nextUrl.pathname.startsWith("/tickets") || request.nextUrl.pathname.startsWith("/dashboard")
   const isProtectedRoute = pathname.startsWith('/tickets');

@@ -1,4 +1,5 @@
 import './globals.css';
+import ReduxProvider from '@/store/provider';
 
 export default function RootLayout({
   children,
@@ -6,8 +7,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body suppressHydrationWarning>{children}</body>
+    <html lang="id">
+      <body>
+        <ReduxProvider>{children}</ReduxProvider>
+      </body>
     </html>
   );
 }
