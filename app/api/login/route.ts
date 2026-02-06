@@ -7,7 +7,7 @@ export const POST = async (request: Request) => {
   const body = await request.json();
 
   // Melakukan validasi kredensial (hardcoded) untuk mengecek apakah email dan password sesuai
-  if (body.email === 'admin@gmail.com' && body.password === '123456') {
+  if (body.email === 'admin@mail.com' && body.password === '123456') {
     // Jika benar, buat objek response JSON dengan status success: true
     const response = NextResponse.json({ success: true });
 
