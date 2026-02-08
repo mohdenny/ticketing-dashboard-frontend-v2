@@ -1,33 +1,68 @@
 import { Ticket } from '@/types/ticket';
 
-// FUNGSI PENGAMBIL DATA (Data Fetching)
-const getTickets = async (): Promise<Ticket[]> => {
+const getTickets = async (query: string): Promise<Ticket[]> => {
+  // Mengambil data dari API Route kita sendiri
   const res = await fetch('http://localhost:3000/api/tickets', {
-    // no-store: Memberitahu browser/server untuk TIDAK menyimpan cache.
-    // Data selalu diambil segar (fresh) dari API setiap kali halaman dibuka.
     cache: 'no-store',
   });
 
-  return res.json();
+  if (!res.ok) return [];
+  const data: Ticket[] = await res.json();
+
+  // Logika Filtering: Cari berdasarkan ID atau Judul
+  if (query) {
+    return data.filter(
+      (t) =>
+        t.title.toLowerCase().includes(query.toLowerCase()) ||
+        t.id?.toString().includes(query),
+    );
+  }
+
+  return data;
 };
 
-// SERVER COMPONENT
-// Karena fungsi ini 'async', Next.js tahu ini adalah Server Component.
-export default async function TicketList() {
-  const tickets = await getTickets();
+interface TicketListProps {
+  query: string;
+}
+
+export default async function TicketList({ query }: TicketListProps) {
+  const tickets = await getTickets(query);
 
   return (
-    <ul className="space-y-4">
-      {/* Jika data ada, kita gambar list-nya satu per satu menggunakan .map */}
-      {tickets.map((ticket) => (
-        <li
-          key={ticket.id}
-          className="border p-4 rounded-lg bg-white shadow-sm"
-        >
-          <h3 className="font-semibold text-black">{ticket.title}</h3>
-          <p className="text-gray-600 text-sm">{ticket.description}</p>
-        </li>
-      ))}
-    </ul>
+    <div className="mt-6">
+      {query && (
+        <p className="mb-4 text-sm text-gray-500 italic">
+          Menampilkan hasil pencarian untuk:{' '}
+          <span className="font-bold text-black">"{query}"</span>
+        </p>
+      )}
+
+      {tickets.length > 0 ? (
+        <ul className="space-y-4">
+          {tickets.map((ticket) => (
+            <li
+              key={ticket.id}
+              className="border p-5 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-bold text-lg text-gray-800">
+                  {ticket.title}
+                </h3>
+                <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  #{ticket.id}
+                </span>
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                {ticket.description}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-center py-20 bg-white border-2 border-dashed rounded-2xl text-gray-400">
+          Tidak ada tiket ditemukan.
+        </div>
+      )}
+    </div>
   );
 }

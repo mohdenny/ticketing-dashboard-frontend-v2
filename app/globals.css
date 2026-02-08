@@ -1,1 +1,13 @@
 @import 'tailwindcss';
+
+/* Scrollbar tipis agar tidak mengganggu pandangan */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent; /* Sembunyi secara default */
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Muncul tipis saat area di-hover */
+}

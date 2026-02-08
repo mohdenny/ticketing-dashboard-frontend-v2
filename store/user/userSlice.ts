@@ -1,29 +1,36 @@
+// store/user/userSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-type UserState = {
-  isAuthenticated: boolean;
-  email: string | null;
-};
+// Definisi struktur data user
+interface UserData {
+  email: string;
+  role: 'admin' | 'user' | null;
+}
+
+// Initial state awal: data user kosong
+interface UserState {
+  data: UserData | null;
+}
 
 const initialState: UserState = {
-  isAuthenticated: false,
-  email: null,
+  data: null,
 };
 
-const userSlice = createSlice({
+export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    login(state, action: PayloadAction<string>) {
-      state.isAuthenticated = true;
-      state.email = action.payload;
+    // Reducer untuk menyimpan data user setelah login
+    setUser: (state, action: PayloadAction<UserData>) => {
+      state.data = action.payload;
     },
-    logout(state) {
-      state.isAuthenticated = false;
-      state.email = null;
+    // Reducer untuk mengosongkan data saat logout
+    logout: (state) => {
+      state.data = null;
     },
   },
 });
 
-export const { login, logout } = userSlice.actions;
+// Export action dan reducer
+export const { setUser, logout } = userSlice.actions;
 export default userSlice.reducer;

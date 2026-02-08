@@ -1,3 +1,4 @@
+// src/store/ticket/ticketSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Ticket } from '@/types/ticket';
 
@@ -9,18 +10,18 @@ const initialState: TicketState = {
   items: [],
 };
 
-const ticketSlice = createSlice({
+const slice = createSlice({
   name: 'ticket',
   initialState,
   reducers: {
-    setTickets(state, action: PayloadAction<Ticket[]>) {
+    hydrateTickets(state, action: PayloadAction<Ticket[]>) {
       state.items = action.payload;
     },
-    addTicket(state, action: PayloadAction<Ticket>) {
+    optimisticAdd(state, action: PayloadAction<Ticket>) {
       state.items.unshift(action.payload);
     },
   },
 });
 
-export const { setTickets, addTicket } = ticketSlice.actions;
-export default ticketSlice.reducer;
+export const { hydrateTickets, optimisticAdd } = slice.actions;
+export default slice.reducer;
