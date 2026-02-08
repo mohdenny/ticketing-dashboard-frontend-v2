@@ -24,6 +24,8 @@ export default function Home() {
         >
           Lihat Semua Tiket
         </Link>
+
+        {/* Tombol Buat Tiket Baru - Pastikan path folder aplikasi Anda sesuai (/tickets/create) */}
         <Link
           href="/tickets/create"
           className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all"

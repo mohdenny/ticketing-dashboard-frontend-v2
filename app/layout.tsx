@@ -2,6 +2,7 @@ import './globals.css';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
+import { Toaster } from 'sonner';
 import Providers from '@/store/providers';
 // Tambahkan import cookies dari next/headers
 import { cookies } from 'next/headers';
@@ -46,6 +47,7 @@ export default async function RootLayout({
 
           {/* BOTTOM NAV: Muncul hanya di Mobile (di bawah lg) */}
           <BottomNav />
+          <Toaster position="top-center" richColors closeButton />
         </Providers>
       </body>
     </html>

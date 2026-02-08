@@ -6,11 +6,11 @@ interface PageProps {
 }
 
 export default async function TicketsPage({ searchParams }: PageProps) {
-  // Menangkap keyword pencarian global dari URL
+  // Menangkap keyword pencarian global dari URL (?q=...)
   const query = (await searchParams).q || '';
 
   return (
-    <section>
+    <section className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Tiket Anda</h1>
@@ -26,6 +26,7 @@ export default async function TicketsPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
+      {/* Komponen Client yang menangani daftar, edit, hapus, dan detail */}
       <TicketList query={query} />
     </section>
   );

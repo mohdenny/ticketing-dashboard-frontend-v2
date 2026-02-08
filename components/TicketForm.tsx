@@ -1,77 +1,129 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useMemo } from 'react';
+import { toast } from 'sonner';
+import { Ticket } from '@/types/ticket';
 
-export default function TicketForm() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+export default function TicketForm({ initialData }: { initialData?: Ticket }) {
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [description, setDescription] = useState(
+    initialData?.description || '',
+  );
+  const [image, setImage] = useState<string | null>(initialData?.image || null);
+  const [status, setStatus] = useState(initialData?.status || 'open');
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isEdit = !!initialData;
+
+  // Cek apakah ada perubahan data
+  const isChanged = useMemo(() => {
+    if (!isEdit) return title !== '' || description !== '';
+    return (
+      title !== initialData.title ||
+      description !== initialData.description ||
+      status !== initialData.status ||
+      image !== initialData.image
+    );
+  }, [title, description, status, image, initialData, isEdit]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) return alert('Harap isi semua bidang!');
+    if (isEdit && !isChanged) return;
+    setLoading(true);
+    const toastId = toast.loading('Processing...');
 
-    setIsSubmitting(true);
     try {
-      const res = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description }),
-      });
-
-      if (res.ok) {
+      const res = await fetch(
+        isEdit ? `/api/tickets?id=${initialData.id}` : '/api/tickets',
+        {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, image, status }),
+        },
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      toast.success(result.message, { id: toastId });
+      if (!isEdit) {
         setTitle('');
         setDescription('');
-        // Pindah ke halaman list dan segarkan data
-        router.push('/tickets');
-        router.refresh();
+        setImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }
-    } catch (error) {
-      alert('Gagal membuat tiket');
+    } catch (err: any) {
+      toast.error(err.message, { id: toastId });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-8 rounded-2xl shadow-sm border space-y-5"
-    >
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Judul Tiket
-        </label>
-        <input
-          className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-          placeholder="Contoh: Masalah Koneksi VPN"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          disabled={isSubmitting}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        className="w-full border p-3 rounded-lg"
+        placeholder="Judul"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+        disabled={loading}
+      />
+      {isEdit ? (
+        <select
+          className="w-full border p-3 rounded-lg bg-white"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as any)}
+          disabled={loading || initialData?.status === 'closed'}
+        >
+          {initialData?.status === 'open' && <option value="open">Open</option>}
+          <option value="process">Process</option>
+          <option value="closed">Closed</option>
+        </select>
+      ) : (
+        <div className="w-full border p-3 rounded-lg bg-gray-50 text-gray-500 text-sm">
+          Status: <strong>OPEN</strong>
+        </div>
+      )}
+      <textarea
+        className="w-full border p-3 rounded-lg h-32"
+        placeholder="Deskripsi"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        required
+        disabled={loading}
+      />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImageChange}
+        className="w-full border p-3 rounded-lg text-sm"
+        disabled={loading}
+      />
+      {image && (
+        <img
+          src={image}
+          className="w-20 h-20 object-cover rounded-lg border"
+          alt="Preview"
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Deskripsi Detail
-        </label>
-        <textarea
-          className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32"
-          placeholder="Jelaskan masalah Anda secara detail..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          disabled={isSubmitting}
-        />
-      </div>
-
+      )}
       <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors disabled:bg-gray-400"
+        disabled={loading || (isEdit && !isChanged)}
+        className="w-full bg-black text-white px-6 py-3 rounded-lg disabled:bg-gray-300"
       >
-        {isSubmitting ? 'Mengirim...' : 'Kirim Tiket Sekarang'}
+        {loading
+          ? 'Processing...'
+          : isEdit
+            ? 'Simpan Perubahan'
+            : 'Kirim Tiket'}
       </button>
     </form>
   );

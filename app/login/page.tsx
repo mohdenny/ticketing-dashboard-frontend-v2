@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Ambil fungsi login dari hook
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -18,7 +18,10 @@ export default function LoginPage() {
     const result = await login(email, password);
 
     if (!result.success) {
-      alert(result.message);
+      // Mengambil pesan error langsung dari API
+      toast.error(result.message);
+    } else {
+      toast.success(result.message || 'Berhasil masuk!');
     }
 
     setLoading(false);
