@@ -42,11 +42,18 @@ export const POST = async (request: Request) => {
     );
 
     // Misal backend mengirim token di 'body.token', maka gunakan:
-    // response.cookies.set('token', body.token, {
-    //   httpOnly: true, // Proteksi dari XSS
-    //   secure: true,   // Hanya lewat HTTPS
-    //   path: '/',      // Berlaku di semua route
-    // });
+    // Pastikan body.token sudah berisi payload { email, role } yang di-sign oleh backend
+    // response.cookies.set(
+    //   'auth',
+    //   body.token, // Simpan token JWT-nya, bukan JSON string biasa
+    //   {
+    //     httpOnly: true, // Mencegah akses via JS (XSS)
+    //     path: '/',
+    //     secure: process.env.NODE_ENV === 'production', // Hanya lewat HTTPS di prod
+    //     sameSite: 'lax', // Proteksi CSRF standar
+    //     maxAge: 60 * 60 * 24 * 7, // Rekomendasi: set masa berlaku (misal: 7 hari)
+    //   },
+    // );
 
     // Mengirimkan response sukses beserta cookie-nya kembali ke client
     return response;
