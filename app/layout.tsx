@@ -4,15 +4,26 @@ import Sidebar from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
 import { Toaster } from 'sonner';
 import Providers from '@/store/providers';
-// Tambahkan import cookies dari next/headers
 import { cookies } from 'next/headers';
+import type { Metadata, Viewport } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Ticketing System | Support',
+  description: 'Sistem manajemen tiket bantuan internal',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Mencegah zoom yang merusak layout di HP
+};
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // LOGIKA: Ambil data dari cookie 'auth' di sisi server
   const cookieStore = await cookies();
   const authCookie = cookieStore.get('auth');
 
@@ -26,28 +37,43 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <body className="h-screen w-screen overflow-hidden bg-gray-50 flex flex-col">
-        {/* Teruskan initialUser ke Providers tanpa merubah style apa pun */}
+    <html lang="id">
+      {/* Hapus w-screen, gunakan max-w-full.
+        antialiased agar font lebih tajam.
+      */}
+      <body className="min-h-screen max-w-full bg-[#F3EDF7] antialiased overflow-x-hidden">
         <Providers initialUser={initialUser}>
-          <div className="flex flex-1 overflow-hidden h-full">
-            {/* SIDEBAR: Muncul hanya di Desktop (lg ke atas) */}
+          <div className="flex h-screen w-full overflow-hidden relative">
+            {/* Sidebar: Otomatis hilang di mobile via usePathname & Tailwind hidden md:flex */}
             <Sidebar />
 
-            <div className="flex flex-col flex-1 min-w-0 relative h-full">
-              {/* HEADER: Tetap di atas, tidak ikut scroll */}
+            <div className="flex flex-col flex-1 min-w-0 h-full relative overflow-hidden">
               <Header />
 
-              {/* MAIN CONTENT: Area yang bisa scroll sendiri */}
-              <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 lg:pb-8">
-                <div className="max-w-5xl mx-auto">{children}</div>
+              {/* Main Content:
+                - flex-1 agar mengambil sisa ruang.
+                - overflow-y-auto agar bisa scroll vertikal.
+                - pb-24 untuk memberi ruang bagi BottomNav di mobile.
+              */}
+              <main className="flex-1 overflow-y-auto overflow-x-hidden p-0 md:p-0">
+                <div className="w-full min-h-full pb-24 md:pb-0">
+                  {children}
+                </div>
               </main>
             </div>
+
+            {/* BottomNav: Hanya muncul di mobile */}
+            <BottomNav />
           </div>
 
-          {/* BOTTOM NAV: Muncul hanya di Mobile (di bawah lg) */}
-          <BottomNav />
-          <Toaster position="top-center" richColors closeButton />
+          <Toaster
+            position="top-center"
+            richColors
+            closeButton
+            toastOptions={{
+              style: { borderRadius: '12px' },
+            }}
+          />
         </Providers>
       </body>
     </html>

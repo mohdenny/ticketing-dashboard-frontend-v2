@@ -1,136 +1,158 @@
 'use client';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
+import { selectUser } from '@/store/user/userSlice';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  LayoutDashboard,
+  Ticket,
+  PlusCircle,
+  LogOut,
+  User,
+  Menu,
+  ShieldCheck,
+  Settings,
+} from 'lucide-react';
 
 export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const pathname = usePathname();
+  const user = useAppSelector(selectUser);
+  const { logout } = useAuth();
+  const [isManualCollapsed, setIsManualCollapsed] = useState(false);
 
+  // PROTEKSI: Jangan render sidebar di halaman login
   if (pathname === '/login') return null;
 
-  const menus = [
-    { name: 'Dashboard', href: '/', icon: '🏠', sub: null },
+  const isRail = isManualCollapsed;
+
+  const menuGroups = [
     {
-      name: 'Tickets',
-      href: null,
-      icon: '🎫',
-      sub: [
-        { label: 'Lihat Semua', path: '/tickets' },
-        { label: 'Create Ticket', path: '/tickets/create' },
-        { label: 'Urgent', path: '/tickets/urgent' },
-        { label: 'History', path: '/tickets/history' },
-        { label: 'Archived', path: '/tickets/archived' },
-        { label: 'Spam', path: '/tickets/spam' },
+      title: 'Utama',
+      items: [{ name: 'Dashboard', href: '/', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Tiket',
+      items: [
+        { name: 'Tiket Saya', href: '/tickets', icon: Ticket },
+        { name: 'Buat Tiket', href: '/tickets/create', icon: PlusCircle },
+      ],
+    },
+    {
+      title: 'Sistem',
+      items: [
+        { name: 'Admin Panel', href: '/admin', icon: ShieldCheck },
+        { name: 'Setelan', href: '/settings', icon: Settings },
       ],
     },
   ];
 
   return (
     <aside
-      className={`hidden lg:flex flex-col bg-white border-r h-full transition-all duration-300 shrink-0 ${isCollapsed ? 'w-20' : 'w-64'}`}
+      className={`
+        hidden md:flex flex-col h-screen sticky top-0 bg-[#F3EDF7] border-r border-[#E6E0E9] p-3 transition-all duration-300 ease-in-out z-40 overflow-x-hidden
+        ${isRail ? 'w-20' : 'w-72'}
+      `}
     >
-      <div className="h-16 flex items-center justify-between px-4 border-b shrink-0">
-        {!isCollapsed && (
-          <span className="font-bold text-blue-600">PROTICKETS</span>
-        )}
+      <div
+        className={`flex items-center mb-4 shrink-0 ${isRail ? 'justify-center' : 'justify-start px-2'}`}
+      >
         <button
-          onClick={() => {
-            setIsCollapsed(!isCollapsed);
-            setOpenSubmenu(null);
-          }}
-          className="p-2 hover:bg-gray-100 rounded-lg ml-auto"
+          onClick={() => setIsManualCollapsed(!isManualCollapsed)}
+          className="p-3 text-[#49454F] hover:bg-[#E6E0E9] rounded-full transition-colors shrink-0"
         >
-          {isCollapsed ? '➡️' : '⬅️'}
+          <Menu size={24} />
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-visible p-3 space-y-2 custom-scrollbar">
-        {menus.map((menu) => {
-          const isDropdownOpen = openSubmenu === menu.name;
-          const isParentActive = menu.sub?.some((s) => pathname === s.path);
+      <div
+        className={`
+        mb-6 p-3 bg-[#EADDFF] rounded-[28px] flex items-center transition-all duration-300 shrink-0
+        ${isRail ? 'justify-center w-12 h-12 mx-auto' : 'w-full justify-start'}
+      `}
+      >
+        <div className="w-10 h-10 shrink-0 rounded-full bg-[#6750A4] flex items-center justify-center text-white shadow-sm">
+          <User size={20} />
+        </div>
+        {!isRail && (
+          <div className="ml-3 flex flex-col min-w-0">
+            <p className="text-sm font-bold truncate text-[#1C1B1F] leading-tight">
+              {user?.name || 'User'}
+            </p>
+            <p className="text-[10px] text-[#49454F] uppercase tracking-wider font-medium">
+              {user?.role || 'Guest'}
+            </p>
+          </div>
+        )}
+      </div>
 
-          return (
-            <div key={menu.name} className="relative group">
-              <div
-                onClick={() =>
-                  !isCollapsed &&
-                  menu.sub &&
-                  setOpenSubmenu(isDropdownOpen ? null : menu.name)
-                }
-                className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all cursor-pointer ${
-                  pathname === menu.href || isParentActive
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'hover:bg-gray-50 text-gray-600'
-                } ${!menu.href && !isCollapsed ? 'cursor-default' : ''}`}
-              >
-                {menu.href ? (
+      <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar overflow-x-hidden">
+        {menuGroups.map((group) => (
+          <div key={group.title} className="flex flex-col shrink-0">
+            {!isRail && (
+              <p className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-[#49454F] mb-3 whitespace-nowrap">
+                {group.title}
+              </p>
+            )}
+            <div
+              className={`flex flex-col space-y-1 ${isRail ? 'items-center' : 'items-stretch'}`}
+            >
+              {group.items.map((item) => {
+                const isActive = pathname === item.href;
+                return (
                   <Link
-                    href={menu.href}
-                    className="flex items-center gap-4 w-full"
+                    key={item.href}
+                    href={item.href}
+                    className={`
+                      flex items-center transition-all duration-200 relative group shrink-0
+                      ${isActive ? 'bg-[#EADDFF] text-[#21005D]' : 'text-[#49454F] hover:bg-[#E6E0E9]'}
+                      ${isRail ? 'w-12 h-12 justify-center rounded-full' : 'w-full h-14 px-4 rounded-full justify-start'}
+                    `}
                   >
-                    <span className="text-xl shrink-0">{menu.icon}</span>
-                    {!isCollapsed && (
-                      <span className="font-medium truncate">{menu.name}</span>
+                    <item.icon
+                      size={24}
+                      strokeWidth={isActive ? 2.5 : 2}
+                      className="shrink-0"
+                    />
+                    {!isRail && (
+                      <span className="ml-4 text-sm font-medium truncate whitespace-nowrap">
+                        {item.name}
+                      </span>
+                    )}
+                    {isRail && (
+                      <div className="absolute left-16 bg-[#1C1B1F] text-[#F4EFF4] text-xs px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-md">
+                        {item.name}
+                      </div>
                     )}
                   </Link>
-                ) : (
-                  <>
-                    <span className="text-xl shrink-0">{menu.icon}</span>
-                    {!isCollapsed && (
-                      <>
-                        <span className="font-medium truncate">
-                          {menu.name}
-                        </span>
-                        <span
-                          className={`ml-auto text-[10px] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                        >
-                          ▼
-                        </span>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {!isCollapsed && isDropdownOpen && menu.sub && (
-                <div className="mt-2 ml-9 space-y-1">
-                  {menu.sub.map((s) => (
-                    <Link
-                      key={s.path}
-                      href={s.path}
-                      className={`block px-4 py-2 text-sm rounded-lg ${pathname === s.path ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                      {s.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {/* 2. POP-OVER: Ditambahkan pengecekan menu.sub agar Dashboard tidak muncul popover */}
-              {isCollapsed && menu.sub && (
-                <div className="fixed left-20 -mt-12 w-56 bg-white border border-gray-100 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 flex flex-col max-h-[80vh]">
-                  <div className="p-3 font-bold border-b text-[11px] text-gray-500 uppercase tracking-widest bg-gray-50/80 rounded-t-xl">
-                    {menu.name}
-                  </div>
-                  <div className="overflow-y-auto p-1 custom-scrollbar">
-                    {menu.sub.map((s) => (
-                      <Link
-                        key={s.path}
-                        href={s.path}
-                        className={`block px-4 py-2.5 text-sm rounded-lg hover:bg-blue-50 hover:text-blue-600 ${pathname === s.path ? 'text-blue-600 bg-blue-50' : ''}`}
-                      >
-                        {s.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+                );
+              })}
             </div>
-          );
-        })}
+            {!isRail && (
+              <div className="mx-4 mt-4 border-t border-[#E6E0E9] shrink-0" />
+            )}
+          </div>
+        ))}
       </nav>
+
+      <div
+        className={`mt-auto flex shrink-0 ${isRail ? 'justify-center' : 'justify-start px-2'}`}
+      >
+        <button
+          onClick={logout}
+          className={`
+            flex items-center text-[#B3261E] hover:bg-[#FFDAD6] transition-all duration-200 shrink-0
+            ${isRail ? 'w-12 h-12 justify-center rounded-full' : 'w-full h-14 px-4 rounded-full gap-4 justify-start'}
+          `}
+        >
+          <LogOut size={24} className="shrink-0" />
+          {!isRail && (
+            <span className="text-sm font-bold whitespace-nowrap">Keluar</span>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }

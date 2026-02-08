@@ -1,36 +1,60 @@
-// store/user/userSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../index';
 
-// Definisi struktur data user
-interface UserData {
+export interface UserData {
+  id: number | string;
   email: string;
-  role: 'admin' | 'user' | null;
+  role: 'admin' | 'user';
+  name?: string;
 }
 
-// Initial state awal: data user kosong
 interface UserState {
   data: UserData | null;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
 }
 
 const initialState: UserState = {
   data: null,
+  status: 'idle',
+  error: null,
 };
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    // Reducer untuk menyimpan data user setelah login
-    setUser: (state, action: PayloadAction<UserData>) => {
-      state.data = action.payload;
+    // Standard Big Tech: Bersihkan error setiap kali loading dimulai (Implicit Reset)
+    setLoading: (state) => {
+      state.status = 'loading';
+      state.error = null;
     },
-    // Reducer untuk mengosongkan data saat logout
+    // Simpan data user dan set status ke succeeded
+    setUser: (state, action: PayloadAction<UserData | null>) => {
+      state.data = action.payload;
+      state.status = action.payload ? 'succeeded' : 'idle';
+      state.error = null;
+    },
+    // Simpan pesan error untuk ditampilkan di UI Material Design 3 (Error State)
+    setError: (state, action: PayloadAction<string>) => {
+      state.status = 'failed';
+      state.error = action.payload;
+    },
+    // Reset total saat logout
     logout: (state) => {
       state.data = null;
+      state.status = 'idle';
+      state.error = null;
     },
   },
 });
 
-// Export action dan reducer
-export const { setUser, logout } = userSlice.actions;
+// --- SELECTORS (PRO Standard: Menghindari Re-render tidak perlu) ---
+export const selectUser = (state: RootState) => state.user.data;
+export const selectIsAdmin = (state: RootState) =>
+  state.user.data?.role === 'admin';
+export const selectAuthStatus = (state: RootState) => state.user.status;
+export const selectAuthError = (state: RootState) => state.user.error;
+
+export const { setUser, logout, setLoading, setError } = userSlice.actions;
 export default userSlice.reducer;

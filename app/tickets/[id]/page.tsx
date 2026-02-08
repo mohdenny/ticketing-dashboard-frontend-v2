@@ -1,99 +1,213 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Ticket } from '@/types/ticket';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useTicketDetail } from '@/hooks/useTickets';
 import Link from 'next/link';
+import {
+  ArrowLeft,
+  Edit3,
+  Calendar,
+  Clock,
+  Hash,
+  AlertCircle,
+  Loader2,
+  History,
+} from 'lucide-react';
 
 export default function TicketDetailPage() {
   const params = useParams();
-  const [ticket, setTicket] = useState<Ticket | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const ticketId = params.id as string;
+  const { data: ticket, isLoading, error } = useTicketDetail(ticketId);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/tickets?id=${params.id}`, { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.message) throw new Error();
-        setTicket(data);
-      })
-      .catch(() => toast.error('Error'))
-      .finally(() => setLoading(false));
-  }, [params.id]);
+  // PERBAIKAN TS: Pastikan ticket, updatedAt, dan createdAt ada sebelum dihitung
+  const hasBeenUpdated = !!(
+    ticket?.updatedAt &&
+    ticket?.createdAt &&
+    new Date(ticket.updatedAt).getTime() -
+      new Date(ticket.createdAt).getTime() >
+      1000
+  );
 
-  if (loading) return <p className="text-center py-10">Memuat...</p>;
-  if (!ticket) return <p className="text-center py-10">Tidak ada.</p>;
+  if (isLoading)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin text-[#6750A4] mb-2" size={32} />
+        <p className="text-gray-500 font-medium">Memuat detail tiket...</p>
+      </div>
+    );
+
+  if (error || !ticket)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <AlertCircle className="text-red-500 mb-4" size={48} />
+        <h2 className="text-xl font-bold text-gray-900">
+          Tiket Tidak Ditemukan
+        </h2>
+        <p className="text-gray-500 text-sm mt-2">
+          Data mungkin sudah dihapus atau ID tidak valid.
+        </p>
+        <button
+          onClick={() => router.push('/tickets')}
+          className="mt-6 text-[#6750A4] font-semibold hover:underline flex items-center gap-2 mx-auto"
+        >
+          <ArrowLeft size={16} /> Kembali ke Daftar
+        </button>
+      </div>
+    );
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      {/* LIGHTBOX MODAL */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-zoom-out"
           onClick={() => setSelectedImage(null)}
         >
           <img
             src={selectedImage}
-            className="max-w-full max-h-full rounded-lg"
+            className="max-w-full max-h-full rounded-lg shadow-2xl"
+            alt="Zoom"
           />
         </div>
       )}
+
       <Link
         href="/tickets"
-        className="text-sm text-blue-600 hover:underline mb-4 block"
+        className="text-sm text-gray-500 hover:text-[#6750A4] mb-6 flex items-center gap-2 w-fit transition-colors"
       >
-        ← Kembali
+        <ArrowLeft size={16} /> Kembali ke Daftar
       </Link>
-      <div className="bg-white border p-8 rounded-2xl shadow-sm">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex-1 mr-4">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {ticket.title}
-              </h1>
+
+      <div className="bg-white border border-gray-100 p-6 md:p-10 rounded-[32px] shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-3 mb-3 text-[10px] font-black uppercase tracking-wider">
               <span
-                className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${ticket.status === 'open' ? 'bg-emerald-100 text-emerald-700' : ticket.status === 'process' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'}`}
+                className={`px-3 py-1 rounded-full ${
+                  ticket.status === 'open'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : ticket.status === 'process'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-gray-100 text-gray-600'
+                }`}
               >
                 {ticket.status}
               </span>
+
+              {hasBeenUpdated && (
+                <span className="flex items-center gap-1 text-blue-700 bg-blue-50 px-3 py-1 rounded-full animate-in fade-in duration-500">
+                  <History size={10} /> Edited
+                </span>
+              )}
+
+              <div className="flex items-center gap-1 text-gray-400 font-mono">
+                <Hash size={12} /> {ticket.id}
+              </div>
             </div>
-            <p className="text-xs font-mono text-gray-400">
-              ID: #{ticket.id} •{' '}
-              {new Date(ticket.createdAt).toLocaleString('id-ID')}
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+              {ticket.title}
+            </h1>
           </div>
+
           <Link
             href={`/tickets/edit/${ticket.id}`}
-            className="bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+            className="w-full md:w-auto bg-[#1C1B1F] text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            Edit
+            <Edit3 size={16} /> Edit Tiket
           </Link>
         </div>
-        <div className="space-y-3 mb-8">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            Deskripsi
+
+        {/* INFO GRID RESPONSIVE - Perbaikan Overload 1 of 4 Error */}
+        <div
+          className={`grid grid-cols-1 ${hasBeenUpdated ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-8 p-4 bg-[#F3EDF7]/50 rounded-2xl border border-[#E6E0E9]`}
+        >
+          <div className="flex items-center gap-3 text-gray-600">
+            <div className="p-2 bg-white rounded-xl shadow-sm">
+              <Calendar size={18} className="text-[#6750A4]" />
+            </div>
+            <div>
+              <p className="text-gray-400 uppercase font-black text-[9px]">
+                Dibuat
+              </p>
+              <p className="font-bold text-xs">
+                {ticket.createdAt
+                  ? new Date(ticket.createdAt).toLocaleDateString('id-ID')
+                  : '-'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-gray-600">
+            <div className="p-2 bg-white rounded-xl shadow-sm">
+              <Clock size={18} className="text-[#6750A4]" />
+            </div>
+            <div>
+              <p className="text-gray-400 uppercase font-black text-[9px]">
+                Waktu
+              </p>
+              <p className="font-bold text-xs">
+                {ticket.createdAt
+                  ? new Date(ticket.createdAt).toLocaleTimeString('id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '-'}{' '}
+                WIB
+              </p>
+            </div>
+          </div>
+
+          {hasBeenUpdated && (
+            <div className="flex items-center gap-3 text-blue-700 animate-in slide-in-from-left-2 duration-300">
+              <div className="p-2 bg-blue-100 rounded-xl shadow-sm">
+                <History size={18} />
+              </div>
+              <div>
+                <p className="text-blue-500 uppercase font-black text-[9px]">
+                  Terakhir Diupdate
+                </p>
+                <p className="font-bold text-xs">
+                  {ticket.updatedAt
+                    ? new Date(ticket.updatedAt).toLocaleDateString('id-ID')
+                    : '-'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mb-10">
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+            Deskripsi Masalah
           </h2>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
             {ticket.description}
           </p>
         </div>
+
         {ticket.image && (
-          <div className="border-t pt-6">
-            <h2 className="text-xs font-bold text-gray-400 uppercase mb-3">
-              Lampiran
+          <div className="border-t border-gray-100 pt-8">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+              Lampiran Foto
             </h2>
-            <img
-              src={ticket.image}
-              onClick={() => setSelectedImage(ticket.image!)}
-              className="w-full max-w-md h-auto max-h-80 object-cover rounded-xl border cursor-zoom-in"
-            />
-            {ticket.updatedAt && (
-              <p className="text-[10px] text-blue-500 italic mt-4 italic">
-                Terakhir diupdate:{' '}
-                {new Date(ticket.updatedAt).toLocaleString('id-ID')}
-              </p>
-            )}
+            <div
+              className="relative group cursor-zoom-in overflow-hidden rounded-[24px] border border-gray-100"
+              onClick={() => setSelectedImage(ticket.image || null)}
+            >
+              <img
+                src={ticket.image}
+                className="w-full h-auto shadow-sm transition-transform duration-500 group-hover:scale-[1.01]"
+                alt="Attachment"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                  Klik untuk Perbesar
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>

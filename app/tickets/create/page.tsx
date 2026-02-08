@@ -1,20 +1,40 @@
+'use client';
+
 import TicketForm from '@/components/TicketForm';
-import Link from 'next/link';
+import { useTickets } from '@/hooks/useTickets';
+import { useRouter } from 'next/navigation';
+import { TicketFormValues } from '@/schemas/ticketSchema';
 
 export default function CreateTicketPage() {
-  return (
-    // Container utama yang mengatur kerapihan (max-w-2xl)
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <Link
-        href="/tickets"
-        className="text-sm text-blue-600 hover:underline mb-4 block"
-      >
-        ← Kembali ke Daftar Tiket
-      </Link>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Buat Tiket Baru</h1>
+  const router = useRouter();
+  const { createTicket, isProcessing } = useTickets();
 
-      {/* Form akan mengisi lebar container di atas */}
-      <TicketForm />
+  // Fungsi inilah yang diminta oleh TypeScript
+  const handleCreateSubmit = async (data: TicketFormValues) => {
+    try {
+      await createTicket(data);
+      // Jika berhasil, arahkan kembali ke daftar tiket
+      router.push('/tickets');
+      router.refresh();
+    } catch (error) {
+      console.error('Gagal membuat tiket:', error);
+      alert('Gagal membuat tiket, silakan coba lagi.');
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Buat Tiket Baru</h1>
+        <p className="text-gray-500">
+          Isi detail keluhan atau permintaan bantuan Anda.
+        </p>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+        {/* Sekarang kita berikan onSubmit ke komponen TicketForm */}
+        <TicketForm onSubmit={handleCreateSubmit} isLoading={isProcessing} />
+      </div>
     </div>
   );
 }
