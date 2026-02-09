@@ -23,7 +23,7 @@ export default function Sidebar() {
   const { logout } = useAuth();
   const [isManualCollapsed, setIsManualCollapsed] = useState(false);
 
-  // PROTEKSI: Jangan render sidebar di halaman login
+  // Jangan render sidebar di halaman login
   if (pathname === '/login') return null;
 
   const isRail = isManualCollapsed;

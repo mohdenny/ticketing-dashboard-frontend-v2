@@ -7,7 +7,7 @@ import { Ticket } from '@/types/ticket';
 export const useTickets = () => {
   const queryClient = useQueryClient();
 
-  // 1. GET ALL
+  // GET ALL
   const { data: tickets = [], isLoading } = useQuery<Ticket[]>({
     queryKey: ['tickets'],
     queryFn: async () => {
@@ -17,7 +17,7 @@ export const useTickets = () => {
     },
   });
 
-  // 2. POST (Tambah)
+  // POST (Tambah)
   const { mutateAsync: createTicket, isPending: isCreating } = useMutation({
     mutationFn: async (data: TicketFormValues) => {
       const res = await fetch('/api/tickets', {
@@ -30,7 +30,7 @@ export const useTickets = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   });
 
-  // 3. PUT (Update) - SINKRON KE ?id=
+  // PUT (Update)
   const { mutateAsync: updateTicket, isPending: isUpdating } = useMutation({
     mutationFn: async ({
       id,
@@ -39,7 +39,6 @@ export const useTickets = () => {
       id: number | string;
       data: TicketFormValues;
     }) => {
-      // PERBAIKAN: Gunakan ?id= agar terbaca searchParams.get('id') di API
       const res = await fetch(`/api/tickets?id=${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -54,10 +53,9 @@ export const useTickets = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   });
 
-  // 4. DELETE - SINKRON KE ?id=
+  // DELETE
   const { mutateAsync: deleteTicket, isPending: isDeleting } = useMutation({
     mutationFn: async (id: number | string) => {
-      // PERBAIKAN: Sebelumnya /api/tickets/${id}, diubah ke ?id=
       const res = await fetch(`/api/tickets?id=${id}`, {
         method: 'DELETE',
       });
@@ -77,12 +75,11 @@ export const useTickets = () => {
   };
 };
 
-// Hook Detail - SINKRON KE ?id=
+// DETAIL
 export const useTicketDetail = (id: number | string | null) => {
   return useQuery<Ticket>({
     queryKey: ['ticket', String(id)],
     queryFn: async () => {
-      // PERBAIKAN: Sebelumnya /api/tickets/${id}, diubah ke ?id=
       const res = await fetch(`/api/tickets?id=${id}`);
       if (!res.ok) throw new Error('Tiket tidak ditemukan');
       return res.json();

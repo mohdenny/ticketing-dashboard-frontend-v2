@@ -4,6 +4,7 @@ import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/user/userSlice';
 import { useTickets } from '@/hooks/useTickets';
 import Link from 'next/link';
+import TicketStatCard from '@/components/TicketStatCard';
 import {
   Ticket,
   Clock,
@@ -18,7 +19,6 @@ export default function DashboardPage() {
   const user = useAppSelector(selectUser);
   const { tickets, isLoading } = useTickets();
 
-  // PRO Logic: Hitung statistik dari data mentah secara aman
   const stats = {
     total: tickets?.length || 0,
     open: tickets?.filter((t) => t.status === 'open').length || 0,
@@ -27,8 +27,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen">
-      {/* 1. Header Section - M3 Typography Level: Headline Large */}
+    <div className="p-8 max-w-7xl mx-auto lg:w-full min-h-screen">
+      {/* Header Section */}
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 text-[#6750A4] mb-2 font-medium">
@@ -54,10 +54,10 @@ export default function DashboardPage() {
         </Link>
       </header>
 
-      {/* 2. Stats Grid - M3 Tonal Containers & Skeleton Loading */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         {isLoading ? (
-          // SKELETON STATE: 4 kartu bayangan
+          // Skeleton loading state
           [1, 2, 3, 4].map((i) => (
             <div
               key={i}
@@ -65,30 +65,29 @@ export default function DashboardPage() {
             />
           ))
         ) : (
-          // ACTUAL DATA STATE
           <>
-            <StatCard
+            <TicketStatCard
               title="Total Laporan"
               count={stats.total}
               icon={<Ticket size={24} />}
               color="bg-[#F3EDF7] text-[#21005D]"
               description="Seluruh tiket terdaftar"
             />
-            <StatCard
+            <TicketStatCard
               title="Open"
               count={stats.open}
               icon={<AlertCircle size={24} />}
               color="bg-[#FFDAD6] text-[#410002]"
               description="Menunggu antrean"
             />
-            <StatCard
+            <TicketStatCard
               title="Dalam Proses"
               count={stats.process}
               icon={<Clock size={24} />}
               color="bg-[#EADDFF] text-[#21005D]"
               description="Sedang dikerjakan"
             />
-            <StatCard
+            <TicketStatCard
               title="Selesai"
               count={stats.closed}
               icon={<CheckCircle2 size={24} />}
@@ -99,7 +98,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 3. Recent Activity Section */}
+      {/* Recent Activity Section */}
       <section className="bg-white rounded-[28px] p-8 border border-[#E6E0E9] shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-bold text-[#1C1B1F]">
@@ -168,37 +167,6 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
-    </div>
-  );
-}
-
-// Sub-komponen StatCard: Konsisten dengan standar Material Design 3
-interface StatCardProps {
-  title: string;
-  count: number;
-  icon: React.ReactNode;
-  color: string;
-  text?: string;
-  description: string;
-}
-
-function StatCard({ title, count, icon, color, description }: StatCardProps) {
-  return (
-    <div
-      className={`${color} p-6 rounded-[28px] flex flex-col justify-between h-40 transition-transform hover:scale-[1.02] duration-200 cursor-default shadow-sm border border-black/5`}
-    >
-      <div className="flex justify-between items-start">
-        <div className="p-2 bg-white/40 rounded-xl backdrop-blur-sm">
-          {icon}
-        </div>
-        <span className="text-4xl font-black tracking-tighter">{count}</span>
-      </div>
-      <div>
-        <p className="text-sm font-bold leading-none mb-1">{title}</p>
-        <p className="text-[10px] opacity-70 font-medium uppercase tracking-wider">
-          {description}
-        </p>
-      </div>
     </div>
   );
 }

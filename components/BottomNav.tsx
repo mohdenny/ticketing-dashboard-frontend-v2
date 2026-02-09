@@ -8,7 +8,7 @@ import { LayoutDashboard, Ticket, Plus, User, Settings } from 'lucide-react';
 export default function BottomNav() {
   const pathname = usePathname();
 
-  // PROTEKSI: Jangan render di login
+  // Jangan render di login
   if (pathname === '/login') return null;
 
   const items = [

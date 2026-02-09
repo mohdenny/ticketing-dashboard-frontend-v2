@@ -11,13 +11,11 @@ export default function EditTicketPage() {
   const router = useRouter();
   const ticketId = params.id as string;
 
-  // 1. Ambil data detail untuk mengisi form
+  // Ambil data detail untuk isi form
   const { data: ticket, isLoading, error } = useTicketDetail(ticketId);
 
-  // 2. Ambil fungsi update dari hook useTickets
   const { updateTicket, isProcessing } = useTickets();
 
-  // 3. Handler untuk memproses update
   const handleUpdateSubmit = async (formData: TicketFormValues) => {
     try {
       await updateTicket({ id: ticketId, data: formData });
@@ -30,7 +28,6 @@ export default function EditTicketPage() {
     }
   };
 
-  // --- RENDER LOGIC ---
   if (error)
     return (
       <div className="text-center py-20">
@@ -77,7 +74,6 @@ export default function EditTicketPage() {
       </div>
 
       <div className="bg-white p-1 rounded-2xl">
-        {/* Sekarang onSubmit sudah terisi, error TS akan hilang */}
         <TicketForm
           initialData={ticket}
           onSubmit={handleUpdateSubmit}

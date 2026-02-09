@@ -1,10 +1,9 @@
 'use client';
 
 import { Provider } from 'react-redux';
-import { store } from './index'; // atau path store kamu
+import { store } from './index';
 import { useEffect, useState } from 'react';
 import { setUser } from './user/userSlice';
-// --- TAMBAHKAN INI ---
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export default function Providers({
@@ -14,7 +13,7 @@ export default function Providers({
   children: React.ReactNode;
   initialUser: any;
 }) {
-  // --- INISIALISASI QUERY CLIENT ---
+  // Inisiliasi query client
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -27,7 +26,7 @@ export default function Providers({
       }),
   );
 
-  // Logika sinkronisasi initialUser ke Redux
+  // Sinkronisasi initialUser ke Redux
   useEffect(() => {
     if (initialUser) {
       store.dispatch(setUser(initialUser));
@@ -36,7 +35,7 @@ export default function Providers({
 
   return (
     <Provider store={store}>
-      {/* BUNGKUS REDUX DENGAN QUERY CLIENT PROVIDER */}
+      {/* Bungkus redux dan query client di provider */}
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </Provider>
   );

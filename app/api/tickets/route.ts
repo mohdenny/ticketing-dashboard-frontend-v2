@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { Ticket } from '@/types/ticket';
 import { ticketSchema } from '@/schemas/ticketSchema';
 
-// Simulasi database sementara di memori server
+// Mock db
 let tickets: Ticket[] = [];
 
-// --- AMBIL DATA (GET) ---
+// AMBIL DATA (GET)
 export const GET = async (request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -28,7 +28,7 @@ export const GET = async (request: Request) => {
   }
 };
 
-// --- TAMBAH DATA (POST) ---
+// TAMBAH DATA (POST)
 export const POST = async (request: Request) => {
   try {
     const body = await request.json();
@@ -65,7 +65,7 @@ export const POST = async (request: Request) => {
   }
 };
 
-// --- UBAH DATA (PUT) ---
+// UBAH DATA (PUT)
 export const PUT = async (request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -119,7 +119,7 @@ export const PUT = async (request: Request) => {
   }
 };
 
-// --- HAPUS DATA (DELETE) ---
+// HAPUS DATA (DELETE)
 export const DELETE = async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

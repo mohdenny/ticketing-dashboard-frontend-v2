@@ -35,13 +35,13 @@ export const useAuth = () => {
         router.push('/');
         return { success: true };
       } else {
-        // Tangkap error dari API (misal: "Password salah")
+        // Tangkap error dari API, misalnya password salah
         const msg = data.message || 'Login gagal, periksa kembali akun Anda';
         dispatch(setError(msg));
         return { success: false, message: msg };
       }
     } catch (error) {
-      // Tangkap error infrastruktur (misal: Server mati/Internet putus)
+      // Tangkap error infrastruktur , misalnya server mati/internet mati
       const msg =
         'Terjadi kesalahan jaringan. Silakan coba beberapa saat lagi.';
       dispatch(setError(msg));
@@ -53,7 +53,7 @@ export const useAuth = () => {
     try {
       await fetch('/api/logout', { method: 'POST' });
     } finally {
-      // Tetap logout di sisi klien meskipun API logout gagal
+      // Tetap logout di sisi klien walaupun API logout gagal
       dispatch(logoutAction());
       router.refresh();
       router.push('/login');

@@ -122,7 +122,7 @@ export default function TicketDetailPage() {
             </h1>
           </div>
 
-          {/* Tombol Aksi - Dibuat Konsisten */}
+          {/* Tombol Action */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <button
               onClick={handleDelete}

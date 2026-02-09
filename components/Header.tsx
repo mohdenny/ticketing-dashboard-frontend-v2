@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, LogOut, User } from 'lucide-react'; // Big Tech standard: Use icons
+import { Search, LogOut, User } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
@@ -23,7 +23,7 @@ export default function Header() {
     e.preventDefault();
     if (!keyword.trim()) return;
 
-    // BIG TECH NOTE: Gunakan router.push dengan shallow routing jika memungkinkan
+    // Gunakan router.push dengan shallow routing jika memungkinkan
     // atau arahkan langsung ke list tiket dengan query
     router.push(`/tickets?q=${encodeURIComponent(keyword.trim())}`);
   };
@@ -56,7 +56,7 @@ export default function Header() {
 
       {/* USER ACTIONS */}
       <div className="flex items-center gap-3 ml-auto">
-        {user ? (
+        {user && (
           <div className="flex items-center gap-4">
             {/* User Profile Info */}
             <div className="flex flex-col items-end leading-tight hidden xs:flex">
@@ -79,7 +79,7 @@ export default function Header() {
               <User size={18} className="text-gray-500" />
             </div>
 
-            <div className="h-6 w-[1px] bg-gray-200 mx-1" />
+            <div className="h-6 w-px bg-gray-200 mx-1" />
 
             {/* Logout Button */}
             <button
@@ -94,13 +94,6 @@ export default function Header() {
               />
             </button>
           </div>
-        ) : (
-          <button
-            onClick={() => router.push('/login')}
-            className="bg-black text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-all active:scale-95"
-          >
-            Login
-          </button>
         )}
       </div>
     </header>

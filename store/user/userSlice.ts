@@ -5,7 +5,7 @@ export interface UserData {
   id: number | string;
   email: string;
   role: 'admin' | 'user';
-  name?: string;
+  name: string;
 }
 
 interface UserState {
@@ -24,7 +24,7 @@ export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    // Standard Big Tech: Bersihkan error setiap kali loading dimulai (Implicit Reset)
+    // Bersihkan error setiap kali loading dimulai (Implicit Reset)
     setLoading: (state) => {
       state.status = 'loading';
       state.error = null;
@@ -49,7 +49,6 @@ export const userSlice = createSlice({
   },
 });
 
-// --- SELECTORS (PRO Standard: Menghindari Re-render tidak perlu) ---
 export const selectUser = (state: RootState) => state.user.data;
 export const selectIsAdmin = (state: RootState) =>
   state.user.data?.role === 'admin';

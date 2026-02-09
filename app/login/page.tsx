@@ -45,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    // Memastikan kontainer bisa di-scroll di mobile (min-h-full)
+    // Untuk pastiin kontainer bisa di-scroll di mobile (min-h-full)
     <div className="min-h-full w-full bg-[#F3EDF7] flex flex-col items-center justify-center p-4 md:p-8">
       {/* Card Wrapper - Responsive Width */}
       <div className="w-full max-w-[400px] bg-white rounded-[28px] p-6 md:p-10 border border-[#E6E0E9] shadow-sm my-auto">
@@ -113,7 +113,7 @@ export default function LoginPage() {
               )}
             />
 
-            {/* Submit Button - Tetap Full Width */}
+            {/* Submit Button Full Width */}
             <div className="pt-2">
               <Button
                 type="submit"
@@ -139,7 +139,7 @@ export default function LoginPage() {
             Belum punya akses? <br className="md:hidden" />
             <span className="font-semibold text-[#6750A4]">
               {' '}
-              Hubungi IT Support
+              Hubungi Admin
             </span>{' '}
             untuk pendaftaran.
           </p>

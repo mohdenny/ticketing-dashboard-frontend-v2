@@ -9,7 +9,6 @@ export default function CreateTicketPage() {
   const router = useRouter();
   const { createTicket, isProcessing } = useTickets();
 
-  // Fungsi inilah yang diminta oleh TypeScript
   const handleCreateSubmit = async (data: TicketFormValues) => {
     try {
       await createTicket(data);
@@ -23,7 +22,7 @@ export default function CreateTicketPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl lg:max-w-full mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Buat Tiket Baru</h1>
         <p className="text-gray-500">
@@ -31,8 +30,7 @@ export default function CreateTicketPage() {
         </p>
       </div>
 
-      <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-        {/* Sekarang kita berikan onSubmit ke komponen TicketForm */}
+      <div className="bg-white p-8 rounded-3xl border-gray-100 shadow-sm">
         <TicketForm onSubmit={handleCreateSubmit} isLoading={isProcessing} />
       </div>
     </div>
