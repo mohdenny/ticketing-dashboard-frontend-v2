@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { useTickets } from '@/hooks/useTickets';
 import {
   Edit3,
   Trash2,
@@ -11,62 +10,75 @@ import {
   Search,
   History,
   ArrowUpDown,
+  Clock,
 } from 'lucide-react';
 
-interface Ticket {
-  id?: number | string;
-  title: string;
-  description: string;
-  status: string;
-  image?: string;
-  createdAt: string;
-  updatedAt?: string;
+// Interface Generik untuk T data apa saja
+interface DataListProps<T> {
+  data: T[];
+  isLoading: boolean;
+  onDelete: (id: string | number) => Promise<void>;
+  query: string;
+  baseUrl: string; // Contoh: '/tickets', '/maintenance', '/assets'
+  // Mapping untuk menyesuaikan field dari data yang berbeda-beda
+  mapping: {
+    idKey: keyof T;
+    titleKey: keyof T;
+    descKey: keyof T;
+    statusKey: keyof T;
+    imageKey: keyof T;
+    createdKey: keyof T;
+    updatedKey: keyof T;
+  };
 }
 
-export default function DataList({ query }: { query: string }) {
-  const { tickets, isLoading, deleteTicket } = useTickets();
+export default function DataList<T>({
+  data,
+  isLoading,
+  onDelete,
+  query,
+  baseUrl,
+  mapping,
+}: DataListProps<T>) {
   const [filterStatus, setFilterStatus] = useState('all');
-  const [sortDate, setSortDate] = useState('desc'); // 'desc' = Terbaru, 'asc' = Terlama
+  const [sortDate, setSortDate] = useState('desc');
 
-  const checkIsUpdated = (created?: string, updated?: string) => {
+  const checkIsUpdated = (created?: any, updated?: any) => {
     if (!created || !updated) return false;
     return new Date(updated).getTime() - new Date(created).getTime() > 1000;
   };
 
-  const filteredTickets = useMemo(() => {
-    const safeTickets = (tickets as Ticket[]) || [];
-    let data = [...safeTickets];
+  const filteredData = useMemo(() => {
+    const safeData = data || [];
+    let result = [...safeData];
 
-    // Filter berdasarkan Search Query (dari props)
     if (query) {
       const q = query.toLowerCase();
-      data = data.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) || t.id?.toString().includes(q),
+      result = result.filter((item: any) =>
+        item[mapping.titleKey]?.toString().toLowerCase().includes(q) ||
+        item[mapping.idKey]?.toString().includes(q)
       );
     }
 
-    // Filter berdasarkan Status
     if (filterStatus !== 'all') {
-      data = data.filter((t) => t.status === filterStatus);
+      result = result.filter((item: any) => item[mapping.statusKey] === filterStatus);
     }
 
-    // Sort berdasarkan Tanggal
-    data.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
+    result.sort((a: any, b: any) => {
+      const dateA = new Date(a[mapping.createdKey]).getTime();
+      const dateB = new Date(b[mapping.createdKey]).getTime();
       return sortDate === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
-    return data;
-  }, [tickets, query, filterStatus, sortDate]);
+    return result;
+  }, [data, query, filterStatus, sortDate, mapping]);
 
   const handleDelete = async (id: string | number) => {
-    if (!confirm('Yakin ingin menghapus tiket ini?')) return;
+    if (!confirm('Yakin ingin menghapus data ini?')) return;
     const tid = toast.loading('Menghapus...');
     try {
-      await deleteTicket(id.toString());
-      toast.success('Tiket berhasil dihapus', { id: tid });
+      await onDelete(id);
+      toast.success('Data berhasil dihapus', { id: tid });
     } catch (err: any) {
       toast.error(err.message || 'Gagal menghapus', { id: tid });
     }
@@ -76,27 +88,20 @@ export default function DataList({ query }: { query: string }) {
     return (
       <div className="mt-6 space-y-4">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-32 w-full bg-gray-50 animate-pulse rounded-2xl border border-gray-100"
-          />
+          <div key={i} className="h-32 w-full bg-gray-50 animate-pulse rounded-2xl border border-gray-100" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="mt-2 ">
-      {/* FILTER & SORT CONTROLS */}
+    <div className="mt-2">
       <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
         <p className="text-sm text-gray-500 font-medium">
-          Ditemukan{' '}
-          <span className="text-black font-bold">{filteredTickets.length}</span>{' '}
-          laporan
+          Ditemukan <span className="text-black font-bold">{filteredData.length}</span> data
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {/* Sort By Date */}
           <div className="relative flex items-center bg-white border border-gray-200 rounded-xl px-3 group focus-within:ring-2 focus-within:ring-[#6750A4]/20 transition-all">
             <ArrowUpDown size={14} className="text-gray-400 mr-2" />
             <select
@@ -109,11 +114,10 @@ export default function DataList({ query }: { query: string }) {
             </select>
           </div>
 
-          {/* Filter Status */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="text-xs font-bold bg-white border border-gray-200 px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-[#6750A4]/20 transition-all cursor-pointer"
+            className="text-xs font-bold bg-white border border-gray-200 px-4 py-2.5 rounded-xl outline-none"
           >
             <option value="all">Semua Status</option>
             <option value="open">Open</option>
@@ -123,23 +127,19 @@ export default function DataList({ query }: { query: string }) {
         </div>
       </div>
 
-      {filteredTickets.length > 0 ? (
+      {filteredData.length > 0 ? (
         <ul className="space-y-4">
-          {filteredTickets.map((t) => {
-            const hasUpdate = checkIsUpdated(t.createdAt, t.updatedAt);
+          {filteredData.map((item: any) => {
+            const id = item[mapping.idKey];
+            const hasUpdate = checkIsUpdated(item[mapping.createdKey], item[mapping.updatedKey]);
+            
             return (
-              <li
-                key={t.id}
-                className="group border border-gray-100 p-4 rounded-2xl bg-white shadow-sm flex flex-col sm:flex-row gap-5 relative transition-hover hover:border-[#6750A4]/30 hover:shadow-md"
-              >
-                <Link
-                  href={`/tickets/${t.id}`}
-                  className="w-full sm:w-24 h-24 shrink-0 overflow-hidden rounded-xl border block bg-gray-50"
-                >
+              <li key={id} className="group border border-gray-100 p-4 rounded-2xl bg-white shadow-sm flex flex-col sm:flex-row gap-5 relative transition-hover hover:border-[#6750A4]/30">
+                <Link href={`${baseUrl}/${id}`} className="w-full sm:w-24 h-24 shrink-0 overflow-hidden rounded-xl border block bg-gray-50">
                   <img
-                    src={t.image || 'https://placehold.co/400?text=No+Image'}
+                    src={item[mapping.imageKey] || 'https://placehold.co/400?text=No+Image'}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    alt={t.title}
+                    alt="data image"
                   />
                 </Link>
 
@@ -148,21 +148,13 @@ export default function DataList({ query }: { query: string }) {
                     <div className="flex justify-between items-start mb-1">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-gray-100 text-gray-500">
-                            #{t.id}
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-gray-100 text-gray-500">#{id}</span>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
+                            item[mapping.statusKey] === 'open' ? 'bg-emerald-50 text-emerald-600' : 
+                            item[mapping.statusKey] === 'process' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-500'
+                          }`}>
+                            {item[mapping.statusKey]}
                           </span>
-                          <span
-                            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
-                              t.status === 'open'
-                                ? 'bg-emerald-50 text-emerald-600'
-                                : t.status === 'process'
-                                  ? 'bg-amber-50 text-amber-600'
-                                  : 'bg-gray-50 text-gray-500'
-                            }`}
-                          >
-                            {t.status}
-                          </span>
-
                           {hasUpdate && (
                             <span className="flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md text-[9px] font-black uppercase ring-1 ring-blue-100">
                               <History size={10} /> Edited
@@ -170,41 +162,33 @@ export default function DataList({ query }: { query: string }) {
                           )}
                         </div>
                         <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#6750A4] transition-colors line-clamp-1">
-                          <Link href={`/tickets/${t.id}`}>{t.title}</Link>
+                          <Link href={`${baseUrl}/${id}`}>{item[mapping.titleKey]}</Link>
                         </h3>
                       </div>
 
                       <div className="flex gap-1">
-                        <Link
-                          href={`/tickets/edit/${t.id}`}
-                          className="p-2 text-gray-400 hover:text-[#6750A4] hover:bg-[#F3EDF7] rounded-lg transition-all"
-                        >
+                        <Link href={`${baseUrl}/edit/${id}`} className="p-2 text-gray-400 hover:text-[#6750A4] hover:bg-[#F3EDF7] rounded-lg">
                           <Edit3 size={18} />
                         </Link>
-                        <button
-                          onClick={() => handleDelete(t.id!)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        >
+                        <button onClick={() => handleDelete(id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
                           <Trash2 size={18} />
                         </button>
                       </div>
                     </div>
-                    <p className="text-gray-500 text-sm line-clamp-1 mt-1">
-                      {t.description}
-                    </p>
+                    <p className="text-gray-500 text-sm line-clamp-1 mt-1">{item[mapping.descKey]}</p>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-4 text-[11px] text-gray-400 font-medium pt-3 border-t border-gray-50">
+                  <div className="mt-4 flex flex-wrap items-center gap-6 text-[11px] text-gray-400 font-medium pt-3 border-t border-gray-50">
                     <div className="flex items-center gap-1.5">
-                      <Calendar size={12} />{' '}
-                      {t.createdAt
-                        ? new Date(t.createdAt).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })
-                        : '-'}
+                      <Calendar size={12} className="text-emerald-500" />
+                      <span>Dibuat: {new Date(item[mapping.createdKey]).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                     </div>
+                    {item[mapping.updatedKey] && hasUpdate && (
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={12} className="text-blue-500" />
+                        <span>Update: {new Date(item[mapping.updatedKey]).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
@@ -214,12 +198,7 @@ export default function DataList({ query }: { query: string }) {
       ) : (
         <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
           <Search className="text-gray-300 mx-auto mb-4" size={32} />
-          <h3 className="text-gray-900 font-bold tracking-tight">
-            Tidak ada tiket ditemukan
-          </h3>
-          <p className="text-gray-500 text-xs mt-1">
-            Coba sesuaikan filter atau kata kunci pencarian Anda.
-          </p>
+          <h3 className="text-gray-900 font-bold tracking-tight">Data tidak ditemukan</h3>
         </div>
       )}
     </div>
