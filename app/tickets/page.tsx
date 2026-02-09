@@ -1,9 +1,8 @@
 'use client';
 
 import { use } from 'react';
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import TicketList from '@/components/TicketList';
+import PageHeader from '@/components/PageHeader';
 
 export default function TicketsPage({
   searchParams,
@@ -14,24 +13,12 @@ export default function TicketsPage({
   const query = resolvedSearchParams.q || '';
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto min-h-screen bg-[#FEF7FF]">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div>
-          <h1 className="text-[32px] font-medium text-[#1C1B1F] tracking-tight">
-            Manajemen Tiket
-          </h1>
-          <p className="text-[#49454F] mt-1 text-base">
-            Semua laporan dukungan Anda dalam satu tempat.
-          </p>
-        </div>
-
-        <Link
-          href="/tickets/create"
-          className="flex items-center justify-center gap-3 bg-[#6750A4] text-white px-6 py-4 rounded-[16px] font-medium shadow-md hover:shadow-lg active:scale-95 transition-all"
-        >
-          <Plus size={20} /> Buat Tiket
-        </Link>
-      </div>
+    <div className="p-6 md:p-10 max-w-5xl mx-auto lg:max-w-full min-h-screen bg-[#FEF7FF]">
+      <PageHeader
+        title="Manajemen Tiket"
+        caption="Semua laporan dukungan Anda dalam satu tempat."
+        label="Buat Tiket"
+      />
 
       <div className="bg-[#F7F2FA] rounded-[32px] p-6 border border-[#E6E0E9]">
         <TicketList query={query} />

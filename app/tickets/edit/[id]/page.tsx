@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useTicketDetail, useTickets } from '@/hooks/useTickets';
 import { TicketFormValues } from '@/schemas/ticketSchema';
+import { CancelAction } from '@/components/CancelAction';
 
 export default function EditTicketPage() {
   const params = useParams();
@@ -34,12 +35,7 @@ export default function EditTicketPage() {
         <p className="text-red-500 font-semibold">
           Gagal memuat data: {error.message}
         </p>
-        <Link
-          href="/tickets"
-          className="text-blue-500 hover:underline mt-4 block"
-        >
-          Kembali ke Daftar
-        </Link>
+        <CancelAction link="/tickets" label="Kembali ke Daftar" />
       </div>
     );
 
@@ -55,13 +51,8 @@ export default function EditTicketPage() {
     return <p className="text-center py-20">Data tiket tidak ditemukan.</p>;
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <Link
-        href="/tickets"
-        className="text-sm text-gray-500 hover:text-black transition-colors mb-6 inline-flex items-center gap-1"
-      >
-        <span>←</span> Batal dan Kembali
-      </Link>
+    <div className="max-w-2xl mx-auto py-10 px-4 lg:max-w-full">
+      <CancelAction link="/tickets" label="Batal dan Kembali" />
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
@@ -73,7 +64,7 @@ export default function EditTicketPage() {
         </p>
       </div>
 
-      <div className="bg-white p-1 rounded-2xl">
+      <div className="bg-white p-1 rounded-2xl p-6">
         <TicketForm
           initialData={ticket}
           onSubmit={handleUpdateSubmit}

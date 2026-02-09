@@ -86,7 +86,7 @@ export default function TicketList({ query }: { query: string }) {
   }
 
   return (
-    <div className="mt-2">
+    <div className="mt-2 ">
       {/* FILTER & SORT CONTROLS */}
       <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
         <p className="text-sm text-gray-500 font-medium">

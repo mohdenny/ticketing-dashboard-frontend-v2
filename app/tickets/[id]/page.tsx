@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTicketDetail, useTickets } from '@/hooks/useTickets';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { CancelAction } from '@/components/CancelAction';
 import {
-  ArrowLeft,
   Edit3,
   Calendar,
   Clock,
@@ -65,17 +65,13 @@ export default function TicketDetailPage() {
         <h2 className="text-xl font-bold text-gray-900">
           Tiket Tidak Ditemukan
         </h2>
-        <button
-          onClick={() => router.push('/tickets')}
-          className="mt-6 text-[#6750A4] font-semibold hover:underline flex items-center gap-2 mx-auto"
-        >
-          <ArrowLeft size={16} /> Kembali ke Daftar
-        </button>
+
+        <CancelAction link="/tickets" label="Kembali ke Daftar" />
       </div>
     );
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="max-w-3xl mx-auto lg:max-w-full px-4 py-10">
       {/* Lightbox Image */}
       {selectedImage && (
         <div
@@ -90,12 +86,7 @@ export default function TicketDetailPage() {
         </div>
       )}
 
-      <Link
-        href="/tickets"
-        className="text-sm text-gray-500 hover:text-[#6750A4] mb-6 flex items-center gap-2 w-fit transition-colors"
-      >
-        <ArrowLeft size={16} /> Kembali ke Daftar
-      </Link>
+      <CancelAction link="/tickets" label="Kembali ke Daftar" />
 
       <div className="bg-white border border-gray-100 p-6 md:p-10 rounded-[32px] shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
@@ -145,7 +136,7 @@ export default function TicketDetailPage() {
 
         {/* Informasi Waktu & Status Update */}
         <div
-          className={`grid grid-cols-1 ${hasBeenUpdated ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-8 p-4 bg-[#F3EDF7]/50 rounded-2xl border border-[#E6E0E9]`}
+          className={`grid grid-cols-1 ${hasBeenUpdated ? 'md:grid-cols-4' : 'md:grid-cols-2'} gap-4 mb-8 p-4 bg-[#F3EDF7]/50 rounded-2xl border border-[#E6E0E9]`}
         >
           <div className="flex items-center gap-3 text-gray-600">
             <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -184,21 +175,43 @@ export default function TicketDetailPage() {
           </div>
 
           {hasBeenUpdated && (
-            <div className="flex items-center gap-3 text-blue-700">
-              <div className="p-2 bg-blue-100 rounded-xl shadow-sm">
-                <History size={18} />
+            <>
+              <div className="flex items-center gap-3 text-blue-700">
+                <div className="p-2 bg-blue-100 rounded-xl shadow-sm">
+                  <History size={18} />
+                </div>
+                <div>
+                  <p className="text-blue-500 uppercase font-black text-[9px]">
+                    Terakhir Diupdate
+                  </p>
+                  <p className="font-bold text-xs">
+                    {ticket.updatedAt
+                      ? new Date(ticket.updatedAt).toLocaleDateString('id-ID')
+                      : '-'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-blue-500 uppercase font-black text-[9px]">
-                  Terakhir Diupdate
-                </p>
-                <p className="font-bold text-xs">
-                  {ticket.updatedAt
-                    ? new Date(ticket.updatedAt).toLocaleDateString('id-ID')
-                    : '-'}
-                </p>
+
+              <div className="flex items-center gap-3 text-blue-700">
+                <div className="p-2 bg-blue-100 rounded-xl shadow-sm">
+                  <Clock size={18} className="text-[#6750A4]" />
+                </div>
+                <div>
+                  <p className="text-blue-500 uppercase font-black text-[9px]">
+                    Waktu
+                  </p>
+                  <p className="font-bold text-xs">
+                    {ticket.updatedAt
+                      ? new Date(ticket.updatedAt).toLocaleTimeString('id-ID', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : '-'}{' '}
+                    WIB
+                  </p>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
@@ -222,7 +235,7 @@ export default function TicketDetailPage() {
             >
               <img
                 src={ticket.image}
-                className="w-full h-auto shadow-sm transition-transform duration-500 group-hover:scale-[1.01]"
+                className="w-72 h-auto shadow-sm transition-transform duration-500 group-hover:scale-[1.01]"
                 alt="Attachment"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
