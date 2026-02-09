@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
 import { Ticket } from '@/types/ticket';
-// BIG TECH NOTE: Gunakan schema untuk validasi data masuk di server (server-side guard)
 import { ticketSchema } from '@/schemas/ticketSchema';
 
 // Simulasi database sementara di memori server
 let tickets: Ticket[] = [];
-
-/**
- * ROUTE HANDLERS
- */
 
 // --- AMBIL DATA (GET) ---
 export const GET = async (request: Request) => {
@@ -17,14 +12,13 @@ export const GET = async (request: Request) => {
     const id = searchParams.get('id');
 
     if (id) {
-      const ticket = tickets.find((t) => t.id?.toString() === id);
+      const ticket = tickets.find((t) => t.id?.toString() === id.toString());
       if (ticket) return NextResponse.json(ticket);
       return NextResponse.json(
         { message: 'Tiket tidak ditemukan' },
         { status: 404 },
       );
     }
-    // BIG TECH NOTE: Di sistem nyata, tambahkan limit atau pagination di sini
     return NextResponse.json(tickets);
   } catch (error) {
     return NextResponse.json(
@@ -39,8 +33,6 @@ export const POST = async (request: Request) => {
   try {
     const body = await request.json();
 
-    // BIG TECH NOTE: Server-side validation menggunakan Zod.
-    // Mencegah data "sampah" masuk ke database memori kita.
     const validation = ticketSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
@@ -52,11 +44,11 @@ export const POST = async (request: Request) => {
     const now = new Date().toISOString();
 
     const newTicket: Ticket = {
-      id: Date.now(), // BIG TECH NOTE: Gunakan UUID atau database auto-increment di sistem nyata
+      id: Date.now(),
       title: body.title,
       description: body.description,
       image: body.image,
-      status: 'open', // Tiket baru selalu otomatis 'open'
+      status: 'open',
       createdAt: now,
     };
 
@@ -83,13 +75,11 @@ export const PUT = async (request: Request) => {
     if (!id)
       return NextResponse.json({ message: 'ID diperlukan' }, { status: 400 });
 
-    const index = tickets.findIndex((t) => t.id?.toString() === id);
+    const index = tickets.findIndex((t) => t.id?.toString() === id.toString());
 
     if (index !== -1) {
       const current = tickets[index];
 
-      // BIG TECH NOTE: Business Logic Validation.
-      // Logika Status: Tidak bisa balik ke Open jika sudah Process/Closed
       if (current.status !== 'open' && body.status === 'open') {
         return NextResponse.json(
           { message: 'Status tidak bisa kembali ke Open' },
@@ -103,7 +93,6 @@ export const PUT = async (request: Request) => {
         );
       }
 
-      // Merge data dengan proteksi (hanya field tertentu yang boleh diupdate)
       tickets[index] = {
         ...current,
         title: body.title ?? current.title,
@@ -139,7 +128,7 @@ export const DELETE = async (request: Request) => {
     return NextResponse.json({ message: 'ID diperlukan' }, { status: 400 });
 
   const initialLength = tickets.length;
-  tickets = tickets.filter((t) => t.id?.toString() !== id);
+  tickets = tickets.filter((t) => t.id?.toString() !== id.toString());
 
   if (tickets.length === initialLength) {
     return NextResponse.json(

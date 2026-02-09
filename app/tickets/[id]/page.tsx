@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTicketDetail } from '@/hooks/useTickets';
+import { useTicketDetail, useTickets } from '@/hooks/useTickets';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -13,6 +14,7 @@ import {
   AlertCircle,
   Loader2,
   History,
+  Trash2,
 } from 'lucide-react';
 
 export default function TicketDetailPage() {
@@ -20,9 +22,10 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const ticketId = params.id as string;
   const { data: ticket, isLoading, error } = useTicketDetail(ticketId);
+  const { deleteTicket } = useTickets();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // PERBAIKAN TS: Pastikan ticket, updatedAt, dan createdAt ada sebelum dihitung
   const hasBeenUpdated = !!(
     ticket?.updatedAt &&
     ticket?.createdAt &&
@@ -30,6 +33,22 @@ export default function TicketDetailPage() {
       new Date(ticket.createdAt).getTime() >
       1000
   );
+
+  const handleDelete = async () => {
+    if (!confirm('Apakah Anda yakin ingin menghapus tiket ini?')) return;
+
+    setIsDeleting(true);
+    const tid = toast.loading('Menghapus tiket...');
+    try {
+      await deleteTicket(ticketId);
+      toast.success('Tiket berhasil dihapus', { id: tid });
+      router.push('/tickets');
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menghapus tiket', { id: tid });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoading)
     return (
@@ -46,9 +65,6 @@ export default function TicketDetailPage() {
         <h2 className="text-xl font-bold text-gray-900">
           Tiket Tidak Ditemukan
         </h2>
-        <p className="text-gray-500 text-sm mt-2">
-          Data mungkin sudah dihapus atau ID tidak valid.
-        </p>
         <button
           onClick={() => router.push('/tickets')}
           className="mt-6 text-[#6750A4] font-semibold hover:underline flex items-center gap-2 mx-auto"
@@ -60,7 +76,7 @@ export default function TicketDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      {/* LIGHTBOX MODAL */}
+      {/* Lightbox Image */}
       {selectedImage && (
         <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-zoom-out"
@@ -86,19 +102,13 @@ export default function TicketDetailPage() {
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3 mb-3 text-[10px] font-black uppercase tracking-wider">
               <span
-                className={`px-3 py-1 rounded-full ${
-                  ticket.status === 'open'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : ticket.status === 'process'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-gray-100 text-gray-600'
-                }`}
+                className={`px-3 py-1 rounded-full ${ticket.status === 'open' ? 'bg-emerald-100 text-emerald-700' : ticket.status === 'process' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}
               >
                 {ticket.status}
               </span>
 
               {hasBeenUpdated && (
-                <span className="flex items-center gap-1 text-blue-700 bg-blue-50 px-3 py-1 rounded-full animate-in fade-in duration-500">
+                <span className="flex items-center gap-1 text-blue-700 bg-blue-50 px-3 py-1 rounded-full ring-1 ring-blue-100">
                   <History size={10} /> Edited
                 </span>
               )}
@@ -112,15 +122,28 @@ export default function TicketDetailPage() {
             </h1>
           </div>
 
-          <Link
-            href={`/tickets/edit/${ticket.id}`}
-            className="w-full md:w-auto bg-[#1C1B1F] text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2"
-          >
-            <Edit3 size={16} /> Edit Tiket
-          </Link>
+          {/* Tombol Aksi - Dibuat Konsisten */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-50 text-red-600 px-5 py-3 rounded-2xl text-sm font-bold hover:bg-red-100 transition-all active:scale-95 disabled:opacity-50 border border-red-100"
+            >
+              <Trash2 size={18} />
+              <span className="md:hidden lg:inline">Hapus</span>
+            </button>
+
+            <Link
+              href={`/tickets/edit/${ticket.id}`}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#1C1B1F] text-white px-5 py-3 rounded-2xl text-sm font-bold hover:bg-black transition-all active:scale-95 shadow-sm"
+            >
+              <Edit3 size={18} />
+              <span>Edit Tiket</span>
+            </Link>
+          </div>
         </div>
 
-        {/* INFO GRID RESPONSIVE - Perbaikan Overload 1 of 4 Error */}
+        {/* Informasi Waktu & Status Update */}
         <div
           className={`grid grid-cols-1 ${hasBeenUpdated ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-8 p-4 bg-[#F3EDF7]/50 rounded-2xl border border-[#E6E0E9]`}
         >
@@ -161,7 +184,7 @@ export default function TicketDetailPage() {
           </div>
 
           {hasBeenUpdated && (
-            <div className="flex items-center gap-3 text-blue-700 animate-in slide-in-from-left-2 duration-300">
+            <div className="flex items-center gap-3 text-blue-700">
               <div className="p-2 bg-blue-100 rounded-xl shadow-sm">
                 <History size={18} />
               </div>

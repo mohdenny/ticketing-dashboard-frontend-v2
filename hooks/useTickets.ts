@@ -30,7 +30,7 @@ export const useTickets = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   });
 
-  // 3. PUT (Update) - DISESUAIKAN KE QUERY PARAMS (?id=)
+  // 3. PUT (Update) - SINKRON KE ?id=
   const { mutateAsync: updateTicket, isPending: isUpdating } = useMutation({
     mutationFn: async ({
       id,
@@ -39,8 +39,8 @@ export const useTickets = () => {
       id: number | string;
       data: TicketFormValues;
     }) => {
+      // PERBAIKAN: Gunakan ?id= agar terbaca searchParams.get('id') di API
       const res = await fetch(`/api/tickets?id=${id}`, {
-        // Pakai ?id=
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -54,11 +54,15 @@ export const useTickets = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   });
 
-  // 4. DELETE - DISESUAIKAN KE QUERY PARAMS (?id=)
+  // 4. DELETE - SINKRON KE ?id=
   const { mutateAsync: deleteTicket, isPending: isDeleting } = useMutation({
     mutationFn: async (id: number | string) => {
-      const res = await fetch(`/api/tickets/${id}`, { method: 'DELETE' }); // Pakai ?id=
+      // PERBAIKAN: Sebelumnya /api/tickets/${id}, diubah ke ?id=
+      const res = await fetch(`/api/tickets?id=${id}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error('Gagal menghapus');
+      return res.json();
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   });
@@ -73,12 +77,13 @@ export const useTickets = () => {
   };
 };
 
-// Hook Detail - DISESUAIKAN
+// Hook Detail - SINKRON KE ?id=
 export const useTicketDetail = (id: number | string | null) => {
   return useQuery<Ticket>({
     queryKey: ['ticket', String(id)],
     queryFn: async () => {
-      const res = await fetch(`/api/tickets/${id}`); // Pakai ?id=
+      // PERBAIKAN: Sebelumnya /api/tickets/${id}, diubah ke ?id=
+      const res = await fetch(`/api/tickets?id=${id}`);
       if (!res.ok) throw new Error('Tiket tidak ditemukan');
       return res.json();
     },
