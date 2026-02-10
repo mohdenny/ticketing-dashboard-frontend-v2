@@ -1,39 +1,30 @@
 import { NextResponse } from 'next/server';
-import { Ticket } from '@/types/ticket';
+import { Ticket, TicketUpdate } from '@/types/ticket';
 import { ticketSchema } from '@/schemas/ticketSchema';
 
-// Mock db
+// Mock DB
 let tickets: Ticket[] = [];
 
-// AMBIL DATA (GET)
 export const GET = async (request: Request) => {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
 
-    if (id) {
-      const ticket = tickets.find((t) => t.id?.toString() === id.toString());
-      if (ticket) return NextResponse.json(ticket);
-      return NextResponse.json(
-        { message: 'Tiket tidak ditemukan' },
-        { status: 404 },
-      );
-    }
-    return NextResponse.json(tickets);
-  } catch (error) {
+  if (id) {
+    const ticket = tickets.find((t) => t.id.toString() === id.toString());
+    if (ticket) return NextResponse.json(ticket);
     return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
+      { message: 'Tiket tidak ditemukan' },
+      { status: 404 },
     );
   }
+  return NextResponse.json(tickets);
 };
 
-// TAMBAH DATA (POST)
 export const POST = async (request: Request) => {
   try {
     const body = await request.json();
-
     const validation = ticketSchema.safeParse(body);
+
     if (!validation.success) {
       return NextResponse.json(
         { message: 'Data tidak valid', errors: validation.error.format() },
@@ -47,9 +38,11 @@ export const POST = async (request: Request) => {
       id: Date.now(),
       title: body.title,
       description: body.description,
-      image: body.image,
-      status: 'open',
+      images: body.images || [],
+      status: 'open', // Default status saat create
       createdAt: now,
+      updatedAt: now,
+      updates: [],
     };
 
     tickets.push(newTicket);
@@ -65,7 +58,6 @@ export const POST = async (request: Request) => {
   }
 };
 
-// UBAH DATA (PUT)
 export const PUT = async (request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -75,31 +67,37 @@ export const PUT = async (request: Request) => {
     if (!id)
       return NextResponse.json({ message: 'ID diperlukan' }, { status: 400 });
 
-    const index = tickets.findIndex((t) => t.id?.toString() === id.toString());
+    const index = tickets.findIndex((t) => t.id.toString() === id.toString());
 
     if (index !== -1) {
       const current = tickets[index];
 
-      if (current.status !== 'open' && body.status === 'open') {
-        return NextResponse.json(
-          { message: 'Status tidak bisa kembali ke Open' },
-          { status: 400 },
-        );
-      }
-      if (current.status === 'closed' && body.status !== 'closed') {
-        return NextResponse.json(
-          { message: 'Tiket Closed tidak bisa diubah' },
-          { status: 400 },
-        );
+      // [LOGIC FIX 1]: Ambil status baru dari body. Jika null/undefined, pakai status lama.
+      // Form mengirim status di root body (via spread ...data di hook), jadi body.status pasti ada jika diubah.
+      const newStatus = body.status ? body.status : current.status;
+
+      let newUpdates = [...current.updates];
+
+      // [LOGIC FIX 2]: Buat history item hanya jika ada deskripsi update
+      if (body.description && body.user) {
+        const updateItem: TicketUpdate = {
+          id: `upd-${Date.now()}`,
+          ticketId: current.id, // [BARU] Simpan Foreign Key
+          description: body.description,
+          date: new Date().toISOString(),
+          user: body.user,
+          images: body.images || [],
+          status: newStatus, // Simpan snapshot status di history ini
+        };
+        newUpdates.push(updateItem);
       }
 
+      // [LOGIC FIX 3]: Update Object Tiket Utama
       tickets[index] = {
         ...current,
-        title: body.title ?? current.title,
-        description: body.description ?? current.description,
-        image: body.image ?? current.image,
-        status: body.status ?? current.status,
+        status: newStatus, // Update status utama agar tidak 'open' terus
         updatedAt: new Date().toISOString(),
+        updates: newUpdates,
       };
 
       return NextResponse.json({
@@ -107,11 +105,13 @@ export const PUT = async (request: Request) => {
         data: tickets[index],
       });
     }
+
     return NextResponse.json(
       { message: 'Tiket tidak ditemukan' },
       { status: 404 },
     );
   } catch (error) {
+    console.error('PUT Error:', error);
     return NextResponse.json(
       { message: 'Terjadi kesalahan server' },
       { status: 500 },
@@ -119,23 +119,12 @@ export const PUT = async (request: Request) => {
   }
 };
 
-// HAPUS DATA (DELETE)
 export const DELETE = async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-
   if (!id)
     return NextResponse.json({ message: 'ID diperlukan' }, { status: 400 });
 
-  const initialLength = tickets.length;
-  tickets = tickets.filter((t) => t.id?.toString() !== id.toString());
-
-  if (tickets.length === initialLength) {
-    return NextResponse.json(
-      { message: 'Tiket tidak ditemukan' },
-      { status: 404 },
-    );
-  }
-
+  tickets = tickets.filter((t) => t.id.toString() !== id.toString());
   return NextResponse.json({ message: 'Tiket berhasil dihapus' });
 };

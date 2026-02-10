@@ -1,8 +1,11 @@
 export interface TicketUpdate {
   id: string;
-  penjelasan: string;
-  tanggal: string;
+  ticketId: number | string; // [BARU] Foreign Key untuk relasi database
+  description: string;
+  date: string;
   user: string;
+  images: string[];
+  status: 'open' | 'process' | 'closed'; // Snapshot status saat update ini dibuat
 }
 
 export interface Ticket {
@@ -10,8 +13,8 @@ export interface Ticket {
   title: string;
   description: string;
   status: 'open' | 'process' | 'closed';
-  image?: string | null;
+  images: string[];
   createdAt: string;
   updatedAt?: string;
-  updates: TicketUpdate[]; // Array untuk tracking timeline
+  updates: TicketUpdate[];
 }

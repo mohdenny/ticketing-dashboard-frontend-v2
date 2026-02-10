@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useTickets } from '@/hooks/useTickets';
+import { Ticket } from '@/types/ticket';
 import {
   Edit3,
   Trash2,
@@ -15,37 +16,19 @@ import {
   Search,
   Filter,
   Eye,
+  User,
 } from 'lucide-react';
-// Pastikan import ConfirmDialog sesuai lokasi file kamu
 import ConfirmDialog from '@/components/layouts/ConfirmDialog';
-
-interface Ticket {
-  id?: number | string;
-  title: string;
-  description: string;
-  status: string;
-  image?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
 
 export default function TicketList({ query }: { query: string }) {
   const { tickets, isLoading, deleteTicket } = useTickets();
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortDate, setSortDate] = useState('desc');
-
-  // State Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // State untuk Confirm Dialog
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const checkIsUpdated = (created?: string, updated?: string) => {
-    if (!created || !updated) return false;
-    return new Date(updated).getTime() - new Date(created).getTime() > 1000;
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -57,7 +40,23 @@ export default function TicketList({ query }: { query: string }) {
     });
   };
 
-  // Logic filter
+  // Helper: Ambil data update terakhir
+  const getLastActivity = (ticket: Ticket) => {
+    if (ticket.updates && ticket.updates.length > 0) {
+      const lastUpdate = ticket.updates[ticket.updates.length - 1];
+      return {
+        user: lastUpdate.user,
+        date: lastUpdate.date,
+        action: 'Diedit oleh',
+      };
+    }
+    return {
+      user: 'System / Owner',
+      date: ticket.createdAt,
+      action: 'Dibuat oleh',
+    };
+  };
+
   const filteredTickets = useMemo(() => {
     const safeTickets = (tickets as Ticket[]) || [];
     let data = [...safeTickets];
@@ -65,8 +64,7 @@ export default function TicketList({ query }: { query: string }) {
     if (query) {
       const q = query.toLowerCase();
       data = data.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) || t.id?.toString().includes(q),
+        (t) => t.title.toLowerCase().includes(q) || t.id.toString().includes(q),
       );
     }
 
@@ -83,7 +81,6 @@ export default function TicketList({ query }: { query: string }) {
     return data;
   }, [tickets, query, filterStatus, sortDate]);
 
-  // Logic Pagination
   const paginatedTickets = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredTickets.slice(startIndex, startIndex + itemsPerPage);
@@ -91,19 +88,14 @@ export default function TicketList({ query }: { query: string }) {
 
   const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
 
-  // Handler Trigger Modal
   const onTrashClick = (id: string | number) => {
     setSelectedId(id.toString());
     setIsModalOpen(true);
   };
 
-  // Handler Eksekusi Hapus
   const handleDelete = async () => {
     if (!selectedId) return;
-
-    // Tutup modal dulu atau biarkan loading state (tergantung preferensi UI/UX)
     setIsModalOpen(false);
-
     const tid = toast.loading('Menghapus...');
     try {
       await deleteTicket(selectedId);
@@ -143,7 +135,6 @@ export default function TicketList({ query }: { query: string }) {
 
   return (
     <div className="mt-4 space-y-4">
-      {/* --- FILTER & CONTROLS --- */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#FEF7FF] p-4 rounded-[24px] border border-[#CAC4D0]/50 shadow-sm">
         <div className="flex items-center gap-2 text-sm text-[#49454F]">
           <span className="bg-[#E8DEF8] text-[#1D192B] font-bold px-3 py-1 rounded-full text-xs">
@@ -188,7 +179,6 @@ export default function TicketList({ query }: { query: string }) {
         </div>
       </div>
 
-      {/* --- TABLE CONTAINER --- */}
       <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -198,7 +188,9 @@ export default function TicketList({ query }: { query: string }) {
                   Tiket Info
                 </th>
                 <th className="px-6 py-4 font-bold tracking-wider">Status</th>
-                <th className="px-6 py-4 font-bold tracking-wider">Waktu</th>
+                <th className="px-6 py-4 font-bold tracking-wider">
+                  Aktivitas Terakhir
+                </th>
                 <th className="px-6 py-4 font-bold tracking-wider text-right">
                   Aksi
                 </th>
@@ -207,18 +199,24 @@ export default function TicketList({ query }: { query: string }) {
             <tbody className="divide-y divide-[#E6E0E9]">
               {paginatedTickets.length > 0 ? (
                 paginatedTickets.map((t) => {
-                  const hasUpdate = checkIsUpdated(t.createdAt, t.updatedAt);
+                  const activity = getLastActivity(t);
+                  // LOGIKA BARU: Ambil foto pertama saja sebagai thumbnail
+                  const thumbnail =
+                    t.images && t.images.length > 0 ? t.images[0] : null;
+
                   return (
                     <tr
                       key={t.id}
                       className="group bg-[#FEF7FF] hover:bg-[#F3EDF7] transition-colors duration-200"
                     >
-                      {/* Column 1: Image & Title */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded-[12px] bg-[#E6E0E9] overflow-hidden border border-[#CAC4D0] shrink-0">
                             <img
-                              src={t.image || 'https://placehold.co/100?text=?'}
+                              // Ganti t.image dengan variable thumbnail
+                              src={
+                                thumbnail || 'https://placehold.co/100?text=?'
+                              }
                               alt="thumb"
                               className="h-full w-full object-cover"
                             />
@@ -242,39 +240,47 @@ export default function TicketList({ query }: { query: string }) {
                         </div>
                       </td>
 
-                      {/* Column 2: Status */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(
-                            t.status,
-                          )}`}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(t.status)}`}
                         >
                           {t.status}
                         </span>
                       </td>
 
-                      {/* Column 3: Timestamps */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-row gap-8">
                           <div className="flex items-center gap-2 text-[#49454F]">
-                            <Calendar size={14} className="text-[#6750A4]" />
+                            {activity.action === 'Diedit oleh' ? (
+                              <History size={14} className="text-[#006391]" />
+                            ) : (
+                              <Calendar size={14} className="text-[#6750A4]" />
+                            )}
                             <span className="font-medium text-xs">
-                              {formatDate(t.createdAt)}
+                              {activity.date ? formatDate(activity.date) : '-'}
                             </span>
                           </div>
 
-                          {hasUpdate && t.updatedAt && (
-                            <div className="flex items-center gap-2 text-[#006391] bg-[#C2E7FF]/30 px-2 py-1 rounded-lg w-fit">
-                              <History size={12} />
-                              <span className="text-[10px] font-bold">
-                                Diedit: {formatDate(t.updatedAt)}
+                          <div
+                            className={`flex items-center gap-2 px-2 py-1 rounded-lg w-fit ${
+                              activity.action === 'Diedit oleh'
+                                ? 'bg-[#C2E7FF]/40 text-[#001D32]'
+                                : 'bg-[#E6E0E9]/50 text-[#1D1B20]'
+                            }`}
+                          >
+                            <User size={12} />
+                            <div className="flex flex-col leading-none">
+                              <span className="text-[9px] uppercase tracking-wider opacity-70 mb-0.5">
+                                {activity.action}
+                              </span>
+                              <span className="text-[11px] font-bold truncate max-w-[120px]">
+                                {activity.user}
                               </span>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Column 4: Actions (Fixed Visibility & Colored) */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
                           <Link
@@ -319,7 +325,6 @@ export default function TicketList({ query }: { query: string }) {
           </table>
         </div>
 
-        {/* --- PAGINATION FOOTER --- */}
         {filteredTickets.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 bg-[#F3EDF7] border-t border-[#E6E0E9]">
             <div className="text-xs text-[#49454F] font-medium">
