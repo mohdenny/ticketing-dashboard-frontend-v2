@@ -1,6 +1,6 @@
 'use client';
 
-import { TicketRowSkeleton } from '@/components/Skeleton';
+import { TicketRowSkeleton } from '@/components/layouts/Skeleton';
 
 export default function Loading() {
   return (

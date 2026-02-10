@@ -4,7 +4,7 @@ import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/user/userSlice';
 import { useTickets } from '@/hooks/useTickets';
 import Link from 'next/link';
-import TicketStatCard from '@/components/TicketStatCard';
+import TicketStatCard from '@/components/modules/tickets/TicketStatCard';
 import {
   Ticket,
   Clock,

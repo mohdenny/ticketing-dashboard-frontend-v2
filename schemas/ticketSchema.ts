@@ -10,9 +10,13 @@ export const ticketSchema = z.object({
     .string()
     .min(10, { message: 'Deskripsi minimal 10 karakter' })
     .trim(),
-  // Pakai cara paling kompatibel: murni enum
   status: z.enum(['open', 'process', 'closed']),
   image: z.string().nullable().optional(),
+  // Field tambahan untuk log timeline saat update
+  updateMessage: z
+    .string()
+    .min(5, { message: 'Penjelasan update minimal 5 karakter' })
+    .optional(),
 });
 
 export type TicketFormValues = z.infer<typeof ticketSchema>;

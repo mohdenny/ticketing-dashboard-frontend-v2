@@ -1,7 +1,6 @@
 'use client';
 
-import PageHeader from '@/components/PageHeader';
-import DataList from '@/components/DataList';
+import PageHeader from '@/components/layouts/PageTitle';
 
 export default function MaintenancePage() {
   return (
@@ -13,23 +12,7 @@ export default function MaintenancePage() {
       />
 
       <div className="bg-[#F7F2FA] rounded-[32px] p-6 border border-[#E6E0E9]">
-        <DataList 
-  data={assets} 
-  isLoading={isLoading} 
-  onDelete={deleteAsset}
-  query={query}
-  baseUrl="/assets"
-  mapping={{
-    idKey: 'id',
-    titleKey: 'assetName', // Field di DB aset mungkin berbeda
-    descKey: 'location',
-    statusKey: 'condition',
-    imageKey: 'photo',
-    createdKey: 'createdAt',
-    updatedKey: 'updatedAt'
-  }}
-/>
-
+        <p>hi</p>
       </div>
     </div>
   );

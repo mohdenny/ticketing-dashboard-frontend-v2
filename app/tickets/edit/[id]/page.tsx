@@ -1,11 +1,11 @@
 'use client';
 
-import TicketForm from '@/components/TicketForm';
+import TicketForm from '@/components/modules/tickets/TicketForm';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useTicketDetail, useTickets } from '@/hooks/useTickets';
 import { TicketFormValues } from '@/schemas/ticketSchema';
-import { CancelAction } from '@/components/CancelAction';
+import { CancelAction } from '@/components/layouts/CancelAction';
 
 export default function EditTicketPage() {
   const params = useParams();

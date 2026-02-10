@@ -1,7 +1,7 @@
 import './globals.css';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
-import BottomNav from '@/components/BottomNav';
+import Header from '@/components/layouts/Header';
+import Sidebar from '@/components/layouts/Sidebar';
+import BottomNav from '@/components/layouts/BottomNav';
 import { Toaster } from 'sonner';
 import Providers from '@/store/providers';
 import { cookies } from 'next/headers';

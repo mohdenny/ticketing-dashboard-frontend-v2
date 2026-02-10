@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTicketDetail, useTickets } from '@/hooks/useTickets';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { CancelAction } from '@/components/CancelAction';
+import { CancelAction } from '@/components/layouts/CancelAction';
 import {
   Edit3,
   Calendar,
