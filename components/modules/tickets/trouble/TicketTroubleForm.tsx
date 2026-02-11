@@ -48,7 +48,7 @@ export default function TicketTroubleForm({
 }: TicketTroubleFormProps) {
   const { data: userList } = useUsers();
 
-  // --- STATE ---
+  // State management
   const [mainImages, setMainImages] = useState<string[]>(
     initialData?.images || [],
   );
@@ -69,7 +69,7 @@ export default function TicketTroubleForm({
   const [isUpdateExternalInput, setIsUpdateExternalInput] = useState(false);
   const [updateExternalName, setUpdateExternalName] = useState('');
 
-  // --- REACT HOOK FORM ---
+  // React hook room
   const {
     register,
     handleSubmit,
@@ -99,7 +99,7 @@ export default function TicketTroubleForm({
     },
   });
 
-  // --- SYNC STATE KE FORM ---
+  // Sync state ke form
   useEffect(() => {
     setValue('reporters', reporters);
     if (reporters.length > 0) trigger('reporters');
@@ -110,7 +110,7 @@ export default function TicketTroubleForm({
     if (updateReporters.length > 0) trigger('historyReporters');
   }, [updateReporters, setValue, trigger]);
 
-  // --- HANDLERS (Sama Persis dengan MaintenanceForm) ---
+  // Handler
   const handleAddReporter = (value: string) => {
     if (value === 'external') {
       setIsExternalInput(true);
@@ -217,7 +217,7 @@ export default function TicketTroubleForm({
     onSubmit(finalData, historyPayload);
   };
 
-  // --- M3 STYLE UTILS (Sama Persis) ---
+  // M3 STYLE UTILS
   const inputClass = (error?: any) =>
     `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none
     ${
@@ -230,7 +230,6 @@ export default function TicketTroubleForm({
     'text-sm font-medium text-[#49454F] mb-2 block tracking-wide';
   const errorClass = 'text-xs text-[#B3261E] mt-1 ml-1 font-medium';
 
-  // --- UI COMPONENTS ---
   const AttachmentSection = ({ images, target, readOnly = false }: any) => (
     <div className="space-y-2">
       <label className={labelClass}>
@@ -457,7 +456,6 @@ export default function TicketTroubleForm({
     </div>
   );
 
-  // --- BUTTON COMPONENT (M3 Filled Button) ---
   const SubmitButton = () => (
     <button
       type="submit"
@@ -486,7 +484,6 @@ export default function TicketTroubleForm({
     </button>
   );
 
-  // --- RENDER ---
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8 pb-10">
       <div className="mb-6 pb-4 border-b border-[#CAC4D0] flex justify-between items-center">
@@ -507,7 +504,6 @@ export default function TicketTroubleForm({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-        {/* === KOLOM KIRI === */}
         <div
           className={`space-y-6 ${
             initialData ? 'opacity-80 pointer-events-none select-none' : ''
@@ -644,7 +640,7 @@ export default function TicketTroubleForm({
             )}
           </div>
 
-          {/* If Edit Mode, Show Lampiran Awal (Read Only) */}
+          {/* Jika Edit Mode, Show Lampiran Awal jadi Read Only */}
           {initialData && (
             <AttachmentSection
               images={mainImages}
@@ -653,16 +649,16 @@ export default function TicketTroubleForm({
             />
           )}
 
-          {/* === EDIT MODE: PINDAHKAN TECHNICAL FIELDS KE KIRI === */}
+          {/* EDIT MODE: PINDAHKAN TECHNICAL FIELDS KE KIRI */}
           {initialData && <TechnicalFields readOnly={true} />}
         </div>
 
-        {/* === KOLOM KANAN === */}
+        {/* KOLOM KANAN */}
         <div className="space-y-6">
-          {/* === CREATE MODE: TECHNICAL FIELDS DI KANAN === */}
+          {/* CREATE MODE: TECHNICAL FIELDS DI KANAN */}
           {!initialData && <TechnicalFields readOnly={false} />}
 
-          {/* === CREATE MODE: LAMPIRAN & TOMBOL DI KANAN === */}
+          {/* CREATE MODE: LAMPIRAN & TOMBOL DI KANAN */}
           {!initialData && (
             <>
               <AttachmentSection images={mainImages} target="main" />
@@ -672,7 +668,7 @@ export default function TicketTroubleForm({
             </>
           )}
 
-          {/* === EDIT MODE: FORM UPDATE === */}
+          {/* EDIT MODE: FORM UPDATE */}
           {initialData && (
             // M3 Surface Container: #F3EDF7 with larger radius
             <div className="bg-[#F3EDF7] p-6 rounded-[24px] space-y-6 animate-in slide-in-from-right-2 fade-in shadow-none border border-transparent">

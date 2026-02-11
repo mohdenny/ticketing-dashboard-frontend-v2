@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useTicketDetail, useTickets } from '@/hooks/useTickets';
-// [FIX] Gunakan tipe dari schema trouble ticket yang spesifik
 import { TicketTroubleFormValues } from '@/schemas/ticketTroubleSchema';
 import { useMemo } from 'react';
 import TicketTroubleForm from '@/components/modules/tickets/trouble/TicketTroubleForm'; // Pastikan path import sesuai struktur folder Anda
@@ -15,15 +14,15 @@ export default function EditTicketPage() {
   const router = useRouter();
   const ticketId = params.id as string;
 
-  // 1. Ambil data detail
+  // Ambil data detail
   const { data: ticket, isLoading, error } = useTicketDetail(ticketId);
   const { updateTicket, isProcessing } = useTickets();
 
-  // 2. Transform Data: Gabungkan 'Created' + 'Updates' menjadi Timeline Events
+  // Transform Data: Gabungkan 'Created' + 'Updates' menjadi Timeline Events
   const timelineEvents: TimelineEvent[] = useMemo(() => {
     if (!ticket) return [];
 
-    // A. Event Pertama: Pembuatan Tiket
+    // Event Pertama: Pembuatan Tiket
     const createdEvent: TimelineEvent = {
       id: 'created',
       title: 'Tiket Dibuat',
@@ -32,7 +31,7 @@ export default function EditTicketPage() {
       user: 'System / User',
     };
 
-    // B. Event Selanjutnya: Riwayat Updates
+    // Event Selanjutnya: Riwayat Updates
     const updateEvents: TimelineEvent[] = (ticket.updates || []).map(
       (u: any) => {
         // LOGIC SINKRONISASI: Handle images array & legacy image string
@@ -54,14 +53,13 @@ export default function EditTicketPage() {
       },
     );
 
-    // C. Gabung dan Sortir (Terlama di Atas -> Terbaru di Bawah)
+    // Gabung dan Sortir (Terlama di Atas -> Terbaru di Bawah)
     return [createdEvent, ...updateEvents].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
   }, [ticket]);
 
-  // 3. Handle Submit
-  // [FIXED]: Menggunakan tipe TicketTroubleFormValues
+  // Handle Submit
   const handleUpdateSubmit = async (
     formData: TicketTroubleFormValues,
     history?: {
@@ -131,9 +129,9 @@ export default function EditTicketPage() {
         </div>
       </div>
 
-      {/* GRID LAYOUT: KIRI (FORM) - KANAN (TIMELINE) */}
+      {/* Grid layout: kiri form, kanan timeline */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* KOLOM KIRI: FORM EDIT */}
+        {/* kolom kiri form edit */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-[24px] p-6 border border-[#CAC4D0] shadow-sm">
             <TicketTroubleForm
@@ -144,7 +142,7 @@ export default function EditTicketPage() {
           </div>
         </div>
 
-        {/* KOLOM KANAN: TIMELINE / TRACKING */}
+        {/* Kolom kanan, timeline / tracking */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white rounded-[24px] p-6 border border-[#CAC4D0] shadow-sm sticky top-6">
             <div className="flex items-center gap-2 mb-6 border-b border-[#E6E0E9] pb-4">

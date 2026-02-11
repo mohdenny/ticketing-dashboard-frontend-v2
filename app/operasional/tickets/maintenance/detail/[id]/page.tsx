@@ -30,8 +30,8 @@ export default function MaintenanceDetailPage({
 
   // Fetch Data
   const { data: ticket, isLoading } = useMaintenanceDetail(id);
+  console.log(data);
 
-  // --- UTILS ---
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -55,7 +55,7 @@ export default function MaintenanceDetailPage({
     return 'bg-[#E6E0E9] text-[#49454F] border-[#49454F]/10';
   };
 
-  // --- RENDER LOADING ---
+  // Render loading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#FDFCFF] flex items-center justify-center">
@@ -64,7 +64,7 @@ export default function MaintenanceDetailPage({
     );
   }
 
-  // --- RENDER NOT FOUND ---
+  // Empty state
   if (!ticket) {
     return (
       <div className="min-h-screen bg-[#FDFCFF] flex flex-col items-center justify-center gap-4">
@@ -81,15 +81,14 @@ export default function MaintenanceDetailPage({
     );
   }
 
-  // --- RENDER CONTENT ---
+  // Render content
   return (
     <div className="min-h-screen bg-[#FDFCFF] p-6 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* 1. Header Navigation */}
+        {/* Header Navigation */}
         <PageTitle
           title={`Detail Maintenance #${ticket.id}`}
           description="Informasi lengkap jadwal dan riwayat pengerjaan."
-          backUrl="/operasional/tickets/maintenance"
           actionButton={{
             label: 'Edit / Update',
             link: `/operasional/tickets/maintenance/edit/${id}`,
@@ -97,7 +96,7 @@ export default function MaintenanceDetailPage({
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* === KOLOM KIRI: INFO UTAMA === */}
+          {/* KOLOM KIRI: INFO UTAMA */}
           <div className="lg:col-span-2 space-y-6">
             {/* Card: Status & Title */}
             <div className="bg-[#FEF7FF] rounded-[24px] p-6 border border-[#CAC4D0] shadow-sm relative overflow-hidden">
@@ -245,7 +244,7 @@ export default function MaintenanceDetailPage({
             )}
           </div>
 
-          {/* === KOLOM KANAN: TIMELINE === */}
+          {/* Kolom kanan timeline */}
           <div className="lg:col-span-1">
             <div className="bg-[#F3EDF7] rounded-[24px] p-6 border border-[#E7E0EC] h-full">
               <div className="flex items-center gap-2 mb-6 text-[#6750A4]">

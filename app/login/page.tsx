@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { LogIn, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
-  // [UPDATE] Ambil login action dan status isLoading dari useAuth (React Query)
+  // Ambil login action dan status isLoading dari useAuth (React Query)
   const { login, isLoading } = useAuth();
 
   const form = useForm<AuthFormValues>({
@@ -50,7 +50,7 @@ export default function LoginPage() {
   return (
     // Untuk pastiin kontainer bisa di-scroll di mobile (min-h-full)
     <div className="min-h-full w-full bg-[#F3EDF7] flex flex-col items-center justify-center p-4 md:p-8">
-      {/* Card Wrapper - Responsive Width */}
+      {/* Card Wrapper */}
       <div className="w-full max-w-[400px] bg-white rounded-[28px] p-6 md:p-10 border border-[#E6E0E9] shadow-sm my-auto">
         {/* Logo/Icon Wrapper */}
         <div className="flex flex-col items-center mb-8">
@@ -82,7 +82,7 @@ export default function LoginPage() {
                         placeholder="Alamat Email"
                         {...field}
                         className="pl-12 h-14 rounded-2xl border-[#79747E] focus-visible:ring-2 focus-visible:ring-[#6750A4] focus-visible:border-none bg-transparent w-full text-base"
-                        // [UPDATE] Disable saat isLoading dari React Query
+                        // Disable saat isLoading dari React Query
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -108,7 +108,7 @@ export default function LoginPage() {
                         placeholder="Kata Sandi"
                         {...field}
                         className="pl-12 h-14 rounded-2xl border-[#79747E] focus-visible:ring-2 focus-visible:ring-[#6750A4] focus-visible:border-none bg-transparent w-full text-base"
-                        // [UPDATE] Disable saat isLoading dari React Query
+                        // Disable saat isLoading dari React Query
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -122,7 +122,7 @@ export default function LoginPage() {
             <div className="pt-2">
               <Button
                 type="submit"
-                // [UPDATE] Gunakan isLoading dari React Query untuk state button
+                // Gunakan isLoading dari React Query untuk state button
                 disabled={isLoading}
                 className="w-full bg-[#6750A4] text-white h-14 rounded-full hover:bg-[#4F378B] shadow-sm hover:shadow-md transition-all active:scale-[0.97] font-bold text-base flex items-center justify-center gap-3"
               >

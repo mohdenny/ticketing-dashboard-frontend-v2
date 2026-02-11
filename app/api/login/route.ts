@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { authSchema } from '@/schemas/authSchema';
-import { MOCK_USERS } from '@/lib/mockData'; // <--- IMPORT DARI SINI
+import { MOCK_USERS } from '@/lib/mockData';
 
 export const POST = async (request: Request) => {
   try {
@@ -28,7 +28,6 @@ export const POST = async (request: Request) => {
         },
       });
 
-      // ... (Sisa kode cookie sama persis seperti sebelumnya) ...
       response.cookies.set(
         'auth',
         JSON.stringify({

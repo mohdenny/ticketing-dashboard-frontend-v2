@@ -25,7 +25,7 @@ import ConfirmDialog from '@/components/layouts/ConfirmDialog';
 export default function TicketTroubleList({ query }: { query: string }) {
   const { tickets, isLoading, deleteTicket } = useTickets();
 
-  // --- STATE ---
+  // State management
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortDate, setSortDate] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +34,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // --- HELPER FORMAT ---
+  // Helper format
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -61,7 +61,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
     };
   };
 
-  // --- M3 BADGE COLORS ---
+  // Badge color
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -88,7 +88,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
     }
   };
 
-  // --- FILTER & SORT LOGIC ---
+  // Filter dan sort
   const filteredTickets = useMemo(() => {
     const safeTickets = (tickets as TicketTrouble[]) || [];
     let data = [...safeTickets];
@@ -116,7 +116,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
     return data;
   }, [tickets, query, filterStatus, sortDate]);
 
-  // --- PAGINATION LOGIC ---
+  // Pagination
   const paginatedTickets = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredTickets.slice(startIndex, startIndex + itemsPerPage);
@@ -124,7 +124,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
 
   const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
 
-  // --- HANDLERS ---
+  // Handlers
   const onTrashClick = (id: string | number) => {
     setSelectedId(id.toString());
     setIsModalOpen(true);
@@ -144,7 +144,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
     }
   };
 
-  // --- RENDER LOADING ---
+  // Render loading
   if (isLoading) {
     return (
       <div className="w-full bg-[#FEF7FF] rounded-[24px] p-6 space-y-4 border border-[#CAC4D0]">
@@ -158,10 +158,10 @@ export default function TicketTroubleList({ query }: { query: string }) {
     );
   }
 
-  // --- RENDER CONTENT ---
+  // Render content
   return (
     <div className="mt-4 space-y-4">
-      {/* === FILTER BAR === */}
+      {/* FIlter bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#FEF7FF] p-4 rounded-[24px] border border-[#CAC4D0]/50 shadow-sm">
         <div className="flex items-center gap-2 text-sm text-[#49454F]">
           <span className="bg-[#E8DEF8] text-[#1D192B] font-bold px-3 py-1 rounded-full text-xs">
@@ -208,7 +208,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
         </div>
       </div>
 
-      {/* === TABLE === */}
+      {/* Table */}
       <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -248,7 +248,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                       key={t.id}
                       className="group bg-[#FEF7FF] hover:bg-[#F3EDF7] transition-colors duration-200"
                     >
-                      {/* KOLOM 1: INFO */}
+                      {/* Kolom 1 info */}
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-4">
                           <div className="h-12 w-12 rounded-[12px] bg-[#E6E0E9] overflow-hidden border border-[#CAC4D0] shrink-0 mt-1">
@@ -280,7 +280,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                         </div>
                       </td>
 
-                      {/* KOLOM 2: PELAPOR */}
+                      {/* Kolom 2 pelapor */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 text-[#1D1B20]">
                           <div className="bg-[#E6E0E9] p-1.5 rounded-full">
@@ -292,7 +292,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                         </div>
                       </td>
 
-                      {/* KOLOM 3: STATUS */}
+                      {/* Kolom 3 status */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(t.status)}`}
@@ -301,7 +301,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                         </span>
                       </td>
 
-                      {/* KOLOM 4: PRIORITY */}
+                      {/* Kolom 4 priority */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {t.priority && (
                           <span
@@ -313,7 +313,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                         )}
                       </td>
 
-                      {/* KOLOM 5: ACTIVITY */}
+                      {/* Kolom 5 activity */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 text-[#49454F]">
@@ -333,7 +333,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                         </div>
                       </td>
 
-                      {/* KOLOM 6: ACTIONS */}
+                      {/* Kolom 6 aksi */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
                           <Link
@@ -344,7 +344,6 @@ export default function TicketTroubleList({ query }: { query: string }) {
                             <Eye size={18} />
                           </Link>
 
-                          {/* Link Edit pakai stopPropagation agar klik tidak tembus */}
                           <Link
                             href={`/operasional/tickets/trouble/edit/${t.id}`}
                             className="p-2 text-[#6750A4] bg-[#F3EDF7] hover:bg-[#E8DEF8] rounded-full transition-all border border-[#E8DEF8] relative z-10"
@@ -366,7 +365,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
                   );
                 })
               ) : (
-                // EMPTY STATE
+                // Empty state
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center text-[#49454F]">
@@ -382,7 +381,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
           </table>
         </div>
 
-        {/* === PAGINATION === */}
+        {/* Pagination*/}
         {filteredTickets.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 bg-[#F3EDF7] border-t border-[#E6E0E9]">
             <div className="text-xs text-[#49454F] font-medium">
@@ -410,7 +409,7 @@ export default function TicketTroubleList({ query }: { query: string }) {
         )}
       </div>
 
-      {/* === CONFIRM DIALOG === */}
+      {/* Confirm Dialog */}
       <ConfirmDialog
         isOpen={isModalOpen}
         title="Hapus Tiket?"

@@ -24,7 +24,7 @@ export default function CreateMaintenancePage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-10">
+    <div className="max-w-2xl lg:max-w-full mx-auto p-6">
       {/* Header Halaman */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

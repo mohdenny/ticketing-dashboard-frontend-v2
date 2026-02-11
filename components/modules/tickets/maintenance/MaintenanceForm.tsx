@@ -581,9 +581,9 @@ export default function TicketMaintenanceForm({
                 className={inputClass(errors.troubleSource)}
               >
                 <option value="">-- Pilih --</option>
-                <option value="Internal">Internal (Perangkat/Power)</option>
-                <option value="External">External (PLN/Force Majeure)</option>
-                <option value="Material">Material/Sparepart</option>
+                <option value="Cuaca">Cuaca</option>
+                <option value="Genset">Genset</option>
+                <option value="Internet">Internet</option>
               </select>
               {!initialData && (
                 <AlertTriangle

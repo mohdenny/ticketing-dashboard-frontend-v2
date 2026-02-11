@@ -79,13 +79,13 @@ export const PUT = async (request: Request) => {
       const current = tickets[index];
       const now = new Date().toISOString();
 
-      // 1. Tentukan Status Baru
+      // Tentukan Status Baru
       const newStatus = body.status ? body.status : current.status;
 
       let newUpdates = [...current.updates];
 
-      // 2. Logic History Update
-      // [FIX] Cek field history yang baru (historyDescription, historyImages, dll)
+      // Logic History Update
+      // Cek field history yang baru (historyDescription, historyImages, dll)
       if (body.historyDescription && body.historyUser) {
         const updateItem: TicketTroubleUpdate = {
           id: `upd-${Date.now()}`,
@@ -93,21 +93,21 @@ export const PUT = async (request: Request) => {
           description: body.historyDescription,
           date: now,
           user: body.historyUser,
-          // [FIX] Ambil dari historyImages, BUKAN body.images
+          // Ambil dari historyImages, BUKAN body.images
           images: body.historyImages || [],
           status: newStatus,
         };
         newUpdates.push(updateItem);
       }
 
-      // 3. Update Data Utama
+      // Update Data Utama
       tickets[index] = {
         ...current,
         ...body, // Update field lain (runHours, statusTx, dll)
         status: newStatus,
         updatedAt: now,
         updates: newUpdates,
-        // [FIX] Pastikan images utama tetap mengambil body.images (jika diedit) atau tetap current.images
+        // Pastikan images utama tetap mengambil body.images (jika diedit) atau tetap current.images
         // Karena logic di useTickets sudah dipisah, body.images sekarang MURNI foto utama
         images: body.images || current.images,
       };

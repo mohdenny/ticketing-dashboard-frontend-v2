@@ -126,7 +126,6 @@ export async function POST(request: Request) {
   }
 }
 
-// [PUT] UPDATE TIKET (LOGIC TIMELINE ADA DISINI)
 export async function PUT(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -144,8 +143,8 @@ export async function PUT(request: Request) {
     const currentTicket = maintenanceTickets[index];
     const now = new Date().toISOString();
 
-    // 1. Ekstrak Data History dari Payload Frontend
-    // Frontend mengirim: historyNote, historyUser, historyImages, dll.
+    // Ekstrak Data History dari Payload Frontend
+    // Frontend kirim historyNote, historyUser, historyImages, dll.
     const {
       historyNote,
       historyUser,
@@ -154,7 +153,7 @@ export async function PUT(request: Request) {
       ...mainData // Sisa data update (title, networkElement, dll)
     } = body;
 
-    // 2. Logic Update Utama
+    // Logic Update Utama
     const updatedTicket: MaintenanceTicket = {
       ...currentTicket,
       ...mainData, // Update field teknis jika ada perubahan
@@ -162,7 +161,7 @@ export async function PUT(request: Request) {
       updatedAt: now,
     };
 
-    // 3. Logic Tambah Timeline (Jika ada catatan atau perubahan status)
+    // Logic Tambah Timeline (Jika ada catatan atau perubahan status)
     if (historyNote || newStatus !== currentTicket.status) {
       const newLog: TicketUpdateLog = {
         id: `LOG-${Date.now()}`,
@@ -177,7 +176,7 @@ export async function PUT(request: Request) {
       updatedTicket.updates = [newLog, ...currentTicket.updates];
     }
 
-    // 4. Simpan ke Mock DB
+    // Simpan ke Mock DB
     maintenanceTickets[index] = updatedTicket;
 
     return NextResponse.json({ message: 'Updated', data: updatedTicket });
@@ -187,7 +186,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// [DELETE] HAPUS TIKET
+// HAPUS TIKET
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

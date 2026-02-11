@@ -39,8 +39,8 @@ export default function TicketDetailPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // --- LOGIC DISPLAY GAMBAR UTAMA ---
-  // [FIX] Cukup ambil ticket.images atau fallback ke image (legacy)
+  // Logic display gambar utama
+  // Cukup ambil ticket.images atau fallback ke image (legacy)
   const mainImages = useMemo(() => {
     if (!ticket) return [];
     if (ticket.images && ticket.images.length > 0) return ticket.images;
@@ -48,7 +48,7 @@ export default function TicketDetailPage() {
     return [];
   }, [ticket]);
 
-  // --- LOGIC ACTIVITY FEED ---
+  // Logic activity feed
   const activities = useMemo(() => {
     if (!ticket) return [];
 
@@ -65,7 +65,6 @@ export default function TicketDetailPage() {
         status: 'open' as const,
       },
       ...(ticket.updates || []).map((u: any) => {
-        // [FIX] Logic update images tetap sama
         let updateImages: string[] = [];
         if (u.images && Array.isArray(u.images)) {
           updateImages = u.images;
@@ -205,7 +204,7 @@ export default function TicketDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* KOLOM KIRI (DESKRIPSI & TIMELINE) */}
+        {/* Kolom kiri deskripsi dan timeline */}
         <div className="lg:col-span-8 space-y-10">
           {/* Detail Masalah */}
           <div className="relative pl-4 md:pl-0">
@@ -219,7 +218,7 @@ export default function TicketDetailPage() {
                 {ticket.description || 'Tidak ada deskripsi tambahan.'}
               </p>
 
-              {/* [FIX] Menampilkan mainImages (Foto Awal) */}
+              {/* Menampilkan mainImages (Foto Awal) */}
               {mainImages.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-gray-100">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -330,7 +329,7 @@ export default function TicketDetailPage() {
 
                       <p>{activity.content}</p>
 
-                      {/* [FIX] Tampilkan foto UPDATE khusus event update */}
+                      {/* Tampilkan foto UPDATE khusus event update */}
                       {activity.images &&
                         activity.images.length > 0 &&
                         !isInitial && (
@@ -374,7 +373,7 @@ export default function TicketDetailPage() {
             </div>
 
             <div className="space-y-5">
-              {/* 1. Ticket ID */}
+              {/* Ticket ID */}
               <div className="flex items-center gap-3">
                 <div className="mt-0.5 text-gray-400">
                   <Hash size={16} />
@@ -387,7 +386,7 @@ export default function TicketDetailPage() {
                 </div>
               </div>
 
-              {/* 2. Site ID */}
+              {/* Site ID */}
               <div className="flex items-center gap-3">
                 <div className="mt-0.5 text-gray-400">
                   <MapPin size={16} />
@@ -400,7 +399,7 @@ export default function TicketDetailPage() {
                 </div>
               </div>
 
-              {/* 3. Priority */}
+              {/* Priority */}
               <div className="flex items-center gap-3">
                 <div className="mt-0.5 text-gray-400">
                   <AlertCircle size={16} />
@@ -421,7 +420,7 @@ export default function TicketDetailPage() {
                 </div>
               </div>
 
-              {/* 4. Pelapor */}
+              {/* Pelapor */}
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 text-gray-400">
                   <Users size={16} />

@@ -78,7 +78,7 @@ export default function Sidebar() {
           href: '/operasional/tickets/complain',
           icon: MessageSquareWarning,
         },
-        { name: 'Log Aktivitas', href: '/operasional/log', icon: ScrollText }, // Gulungan kertas log history
+        { name: 'Log Aktivitas', href: '/operasional/log', icon: ScrollText },
       ],
     },
     {
@@ -159,7 +159,7 @@ export default function Sidebar() {
         ${isRail ? 'w-[88px] px-0 items-center overflow-visible' : 'w-72 p-3 items-stretch overflow-x-hidden'}
       `}
     >
-      {/* --- Toggle Button --- */}
+      {/* Toggle Button */}
       <div
         className={`flex items-center shrink-0 mt-3 mb-4 ${isRail ? 'justify-center w-full' : 'justify-start px-2'}`}
       >
@@ -171,7 +171,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* --- User Profile --- */}
+      {/* User Profile */}
       <div
         className={`
           mb-6 bg-[#EADDFF] transition-all duration-300 shrink-0 flex items-center overflow-hidden
@@ -193,7 +193,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* --- Navigation List --- */}
+      {/* Navigation List */}
       <nav
         className={`
           flex-1 no-scrollbar
@@ -213,10 +213,6 @@ export default function Sidebar() {
                 key={group.title}
                 className="relative group w-full flex justify-center"
               >
-                {/* 1. LINK UTAMA (RAIL ICON)
-                  - z-40: Paling tinggi, agar SELALU di atas elemen hover/bridge.
-                  - relative: Agar z-index bekerja.
-                */}
                 <Link
                   href={primaryHref}
                   className={`
@@ -234,13 +230,10 @@ export default function Sidebar() {
                   </span>
                 </Link>
 
-                {/* 2. SUBMENU POPOVER
-                  - z-30: Lebih rendah dari tombol utama, tapi cukup tinggi untuk tampil di atas konten halaman.
-                  - left-[60px]: Digeser agar tidak menumpuk pas di tengah tombol.
-                */}
+                {/* Submenu popover */}
                 {hasSubmenu && (
                   <div className="absolute left-[60px] top-0 hidden group-hover:block z-30 pt-1 pl-4">
-                    {/* Invisible Bridge (Area Sambungan) */}
+                    {/* Invisible Bridge */}
                     <div className="absolute top-0 left-0 w-8 h-full bg-transparent" />
 
                     {/* Container Menu */}
@@ -271,7 +264,7 @@ export default function Sidebar() {
             );
           }
 
-          // --- EXPANDED MODE ---
+          // Expanded mode
           return (
             <div key={group.title} className="flex flex-col shrink-0">
               <p className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-[#49454F] mb-3 whitespace-nowrap">
@@ -307,7 +300,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* --- Footer --- */}
+      {/* Footer*/}
       <div
         className={`mt-auto mb-3 shrink-0 flex ${isRail ? 'justify-center w-full' : 'justify-start px-3'}`}
       >

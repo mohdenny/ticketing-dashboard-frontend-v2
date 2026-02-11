@@ -13,7 +13,7 @@ export default function CreateTicketPage() {
   const handleCreateSubmit = async (data: TicketTroubleFormValues) => {
     try {
       await createTicket(data);
-      // Jika berhasil, arahkan kembali ke daftar tiket
+      // Jika berhasil, arahkan kembali ke daftar tiket trouble
       router.push('/operasional/tickets/trouble');
       router.refresh();
     } catch (error) {
