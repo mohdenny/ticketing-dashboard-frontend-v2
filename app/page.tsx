@@ -4,7 +4,7 @@ import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/user/userSlice';
 import { useTickets } from '@/hooks/useTickets';
 import Link from 'next/link';
-import TicketStatCard from '@/components/modules/tickets/TicketStatCard';
+import TicketStatCard from '@/components/modules/tickets/trouble/TicketTroubleStatCard';
 import {
   Ticket,
   Clock,
@@ -46,7 +46,7 @@ export default function DashboardPage() {
         </div>
 
         <Link
-          href="/tickets/create"
+          href="operasional/tickets/create"
           className="flex items-center gap-2 bg-[#6750A4] text-white px-8 py-4 rounded-full shadow-sm hover:shadow-lg active:scale-95 transition-all font-bold text-sm"
         >
           <Plus size={20} />
@@ -105,7 +105,7 @@ export default function DashboardPage() {
             Aktivitas Terakhir
           </h2>
           <Link
-            href="/tickets"
+            href="operasional/tickets"
             className="text-sm font-bold text-[#6750A4] flex items-center gap-1 hover:underline"
           >
             Lihat Semua <ArrowRight size={16} />

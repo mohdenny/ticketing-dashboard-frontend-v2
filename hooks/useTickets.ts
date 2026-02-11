@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Ticket } from '@/types/ticket';
-import { TicketFormValues } from '@/schemas/ticketSchema';
+import { TicketTrouble } from '@/types/ticketTrouble';
+import { TicketTroubleFormValues } from '@/schemas/ticketTroubleSchema';
 
 export interface UserOption {
   id: number | string;
@@ -10,10 +10,9 @@ export interface UserOption {
   role: 'admin' | 'user';
 }
 
-// Payload Update
 type UpdateTicketPayload = {
   id: number | string;
-  data: Partial<TicketFormValues>;
+  data: Partial<TicketTroubleFormValues>;
   history?: {
     description: string;
     user: string;
@@ -37,22 +36,24 @@ export const useUsers = () => {
 export const useTickets = () => {
   const queryClient = useQueryClient();
 
+  // GET ALL
   const {
     data: tickets = [],
     isLoading,
     error,
-  } = useQuery<Ticket[]>({
-    queryKey: ['tickets'],
+  } = useQuery<TicketTrouble[]>({
+    queryKey: ['tickets-trouble'],
     queryFn: async () => {
-      const res = await fetch('/api/tickets');
+      const res = await fetch('/api/tickets/trouble');
       if (!res.ok) throw new Error('Gagal memuat tiket');
       return res.json();
     },
   });
 
+  // POST
   const { mutateAsync: createTicket, isPending: isCreating } = useMutation({
-    mutationFn: async (data: TicketFormValues) => {
-      const res = await fetch('/api/tickets', {
+    mutationFn: async (data: TicketTroubleFormValues) => {
+      const res = await fetch('/api/tickets/trouble', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -64,24 +65,27 @@ export const useTickets = () => {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['tickets-trouble'] });
     },
   });
 
+  // PUT (UPDATE - FIX DISINI)
   const { mutateAsync: updateTicket, isPending: isUpdating } = useMutation({
     mutationFn: async ({ id, data, history }: UpdateTicketPayload) => {
-      // Payload Gabungan
+      // [FIX] Pisahkan historyImages agar tidak menimpa images utama
       const payload = {
-        ...data, // Ini mengandung 'status' dari form (PENTING)
+        ...data, // Ini berisi 'images' (FOTO UTAMA)
+
+        // Mapping data history secara manual dengan nama key yang unik
         ...(history && {
-          description: history.description,
-          user: history.user,
-          images: history.images, // Images khusus update
-          status: history.status, // Redundan untuk safety
+          historyDescription: history.description,
+          historyUser: history.user,
+          historyStatus: history.status,
+          historyImages: history.images, // [PENTING] Kirim sebagai 'historyImages'
         }),
       };
 
-      const res = await fetch(`/api/tickets?id=${id}`, {
+      const res = await fetch(`/api/tickets/trouble?id=${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -94,21 +98,24 @@ export const useTickets = () => {
       return res.json();
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['tickets-trouble'] });
       queryClient.invalidateQueries({
-        queryKey: ['ticket', String(variables.id)],
+        queryKey: ['ticket-trouble', String(variables.id)],
       });
     },
   });
 
+  // DELETE
   const { mutateAsync: deleteTicket, isPending: isDeleting } = useMutation({
     mutationFn: async (id: number | string) => {
-      const res = await fetch(`/api/tickets?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/tickets/trouble?id=${id}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error('Gagal menghapus tiket');
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['tickets-trouble'] });
     },
   });
 
@@ -124,11 +131,11 @@ export const useTickets = () => {
 };
 
 export const useTicketDetail = (id: number | string | null) => {
-  return useQuery<Ticket>({
-    queryKey: ['ticket', String(id)],
+  return useQuery<TicketTrouble>({
+    queryKey: ['ticket-trouble', String(id)],
     queryFn: async () => {
       if (!id) return null;
-      const res = await fetch(`/api/tickets?id=${id}`);
+      const res = await fetch(`/api/tickets/trouble?id=${id}`);
       if (!res.ok) throw new Error('Tiket tidak ditemukan');
       return res.json();
     },

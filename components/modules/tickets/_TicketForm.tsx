@@ -19,7 +19,6 @@ import {
 import { useState, ChangeEvent } from 'react';
 import { useUsers } from '@/hooks/useTickets';
 
-// [FIX] Tambahkan 'status' ke interface ini agar sinkron dengan parent
 interface HistoryData {
   description: string;
   user: string;
@@ -138,7 +137,7 @@ export default function TicketForm({
         description: data.historyNote,
         user: data.assignedUser,
         images: updateImages,
-        status: data.status, // [FIX] Sertakan status dalam payload history
+        status: data.status,
       };
     }
 
@@ -146,7 +145,6 @@ export default function TicketForm({
     onSubmit(finalData, historyPayload);
   };
 
-  // --- KOMPONEN UI LAMPIRAN (Agar bisa dipindah posisinya) ---
   const attachmentSection = (
     <div className="space-y-2">
       <label className="text-sm font-medium text-[#49454F] ml-1">
@@ -207,7 +205,6 @@ export default function TicketForm({
       onSubmit={handleSubmit(onFormSubmit)}
       className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:gap-y-6"
     >
-      {/* --- KIRI --- */}
       <div className="space-y-6">
         {/* Subjek */}
         <div className="space-y-2">
@@ -262,11 +259,9 @@ export default function TicketForm({
           )}
         </div>
 
-        {/* [LAYOUT LOGIC] Jika Edit: Upload di KIRI (Bawah Deskripsi) */}
         {initialData && attachmentSection}
       </div>
 
-      {/* --- KANAN --- */}
       <div className="space-y-6">
         {/* Status Tiket */}
         <div className="space-y-2">
@@ -301,7 +296,6 @@ export default function TicketForm({
           )}
         </div>
 
-        {/* [LAYOUT LOGIC] Jika Create: Upload di KANAN (Samping Deskripsi) */}
         {!initialData && attachmentSection}
 
         {/* Form Update History (Hanya saat Edit) */}

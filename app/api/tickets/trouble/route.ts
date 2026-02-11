@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { Ticket, TicketUpdate } from '@/types/ticket';
-import { ticketSchema } from '@/schemas/ticketSchema';
+import { TicketTrouble, TicketTroubleUpdate } from '@/types/ticketTrouble';
+import { ticketTroubleSchema } from '@/schemas/ticketTroubleSchema';
 
 // Mock DB
-let tickets: Ticket[] = [];
+let tickets: TicketTrouble[] = [];
 
 export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url);
@@ -23,7 +23,7 @@ export const GET = async (request: Request) => {
 export const POST = async (request: Request) => {
   try {
     const body = await request.json();
-    const validation = ticketSchema.safeParse(body);
+    const validation = ticketTroubleSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -33,13 +33,19 @@ export const POST = async (request: Request) => {
     }
 
     const now = new Date().toISOString();
-
-    const newTicket: Ticket = {
+    const newTicket: TicketTrouble = {
       id: Date.now(),
       title: body.title,
-      description: body.description,
-      images: body.images || [],
-      status: 'open', // Default status saat create
+      siteId: body.siteId,
+      description: body.description || '',
+      status: 'open',
+      priority: body.priority || 'Minor',
+      images: body.images || [], // Foto Utama
+      startTime: body.startTime,
+      runHours: body.runHours || '',
+      statusTx: body.statusTx || '',
+      duration: body.duration || '',
+      reporters: body.reporters || [],
       createdAt: now,
       updatedAt: now,
       updates: [],
@@ -71,33 +77,39 @@ export const PUT = async (request: Request) => {
 
     if (index !== -1) {
       const current = tickets[index];
+      const now = new Date().toISOString();
 
-      // [LOGIC FIX 1]: Ambil status baru dari body. Jika null/undefined, pakai status lama.
-      // Form mengirim status di root body (via spread ...data di hook), jadi body.status pasti ada jika diubah.
+      // 1. Tentukan Status Baru
       const newStatus = body.status ? body.status : current.status;
 
       let newUpdates = [...current.updates];
 
-      // [LOGIC FIX 2]: Buat history item hanya jika ada deskripsi update
-      if (body.description && body.user) {
-        const updateItem: TicketUpdate = {
+      // 2. Logic History Update
+      // [FIX] Cek field history yang baru (historyDescription, historyImages, dll)
+      if (body.historyDescription && body.historyUser) {
+        const updateItem: TicketTroubleUpdate = {
           id: `upd-${Date.now()}`,
-          ticketId: current.id, // [BARU] Simpan Foreign Key
-          description: body.description,
-          date: new Date().toISOString(),
-          user: body.user,
-          images: body.images || [],
-          status: newStatus, // Simpan snapshot status di history ini
+          ticketId: current.id,
+          description: body.historyDescription,
+          date: now,
+          user: body.historyUser,
+          // [FIX] Ambil dari historyImages, BUKAN body.images
+          images: body.historyImages || [],
+          status: newStatus,
         };
         newUpdates.push(updateItem);
       }
 
-      // [LOGIC FIX 3]: Update Object Tiket Utama
+      // 3. Update Data Utama
       tickets[index] = {
         ...current,
-        status: newStatus, // Update status utama agar tidak 'open' terus
-        updatedAt: new Date().toISOString(),
+        ...body, // Update field lain (runHours, statusTx, dll)
+        status: newStatus,
+        updatedAt: now,
         updates: newUpdates,
+        // [FIX] Pastikan images utama tetap mengambil body.images (jika diedit) atau tetap current.images
+        // Karena logic di useTickets sudah dipisah, body.images sekarang MURNI foto utama
+        images: body.images || current.images,
       };
 
       return NextResponse.json({

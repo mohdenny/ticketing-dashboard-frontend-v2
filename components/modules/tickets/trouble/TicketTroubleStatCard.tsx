@@ -7,7 +7,7 @@ interface StatCardProps {
   description: string;
 }
 
-export default function TicketStatCard({
+export default function TicketTroubleStatCard({
   title,
   count,
   icon,

@@ -25,7 +25,7 @@ export default function Header() {
 
     // Gunakan router.push dengan shallow routing jika memungkinkan
     // atau arahkan langsung ke list tiket dengan query
-    router.push(`/tickets?q=${encodeURIComponent(keyword.trim())}`);
+    router.push(`/operasional/tickets?q=${encodeURIComponent(keyword.trim())}`);
   };
 
   const onLogoutClick = async () => {

@@ -18,7 +18,8 @@ import { Button } from '@/components/ui/button';
 import { LogIn, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  // [UPDATE] Ambil login action dan status isLoading dari useAuth (React Query)
+  const { login, isLoading } = useAuth();
 
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -32,15 +33,17 @@ export default function LoginPage() {
 
   const onSubmit = async (data: AuthFormValues) => {
     const toastId = toast.loading('Sedang memverifikasi...');
-    try {
-      const result = await login(data.email, data.password);
-      if (!result.success) {
-        toast.error(result.message, { id: toastId });
-      } else {
-        toast.success('Selamat datang kembali!', { id: toastId });
-      }
-    } catch (err) {
-      toast.error('Terjadi kesalahan sistem', { id: toastId });
+
+    // Panggil wrapper login dari hook useAuth
+    // Wrapper ini sudah menangani try-catch internal dan mengembalikan object { success, message }
+    const result = await login(data.email, data.password);
+
+    if (result && !result.success) {
+      // Jika gagal (dari catch block di hook), tampilkan error
+      toast.error(result.message, { id: toastId });
+    } else {
+      // Jika sukses, hook useAuth akan menangani redirect di 'onSuccess'
+      toast.success('Selamat datang kembali!', { id: toastId });
     }
   };
 
@@ -79,7 +82,8 @@ export default function LoginPage() {
                         placeholder="Alamat Email"
                         {...field}
                         className="pl-12 h-14 rounded-2xl border-[#79747E] focus-visible:ring-2 focus-visible:ring-[#6750A4] focus-visible:border-none bg-transparent w-full text-base"
-                        disabled={form.formState.isSubmitting}
+                        // [UPDATE] Disable saat isLoading dari React Query
+                        disabled={isLoading}
                       />
                     </FormControl>
                   </div>
@@ -104,7 +108,8 @@ export default function LoginPage() {
                         placeholder="Kata Sandi"
                         {...field}
                         className="pl-12 h-14 rounded-2xl border-[#79747E] focus-visible:ring-2 focus-visible:ring-[#6750A4] focus-visible:border-none bg-transparent w-full text-base"
-                        disabled={form.formState.isSubmitting}
+                        // [UPDATE] Disable saat isLoading dari React Query
+                        disabled={isLoading}
                       />
                     </FormControl>
                   </div>
@@ -117,10 +122,11 @@ export default function LoginPage() {
             <div className="pt-2">
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting}
+                // [UPDATE] Gunakan isLoading dari React Query untuk state button
+                disabled={isLoading}
                 className="w-full bg-[#6750A4] text-white h-14 rounded-full hover:bg-[#4F378B] shadow-sm hover:shadow-md transition-all active:scale-[0.97] font-bold text-base flex items-center justify-center gap-3"
               >
-                {form.formState.isSubmitting ? (
+                {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>Memproses...</span>

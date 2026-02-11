@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useTickets } from '@/hooks/useTickets';
-import { Ticket } from '@/types/ticket';
+import { TicketTrouble } from '@/types/ticketTrouble';
 import {
   Edit3,
   Trash2,
@@ -17,11 +17,15 @@ import {
   Filter,
   Eye,
   User,
+  MapPin,
+  AlertCircle,
 } from 'lucide-react';
 import ConfirmDialog from '@/components/layouts/ConfirmDialog';
 
-export default function TicketList({ query }: { query: string }) {
+export default function TicketTroubleList({ query }: { query: string }) {
   const { tickets, isLoading, deleteTicket } = useTickets();
+
+  // --- STATE ---
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortDate, setSortDate] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,6 +34,7 @@ export default function TicketList({ query }: { query: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // --- HELPER FORMAT ---
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -40,31 +45,61 @@ export default function TicketList({ query }: { query: string }) {
     });
   };
 
-  // Helper: Ambil data update terakhir
-  const getLastActivity = (ticket: Ticket) => {
+  const getLastActivity = (ticket: TicketTrouble) => {
     if (ticket.updates && ticket.updates.length > 0) {
       const lastUpdate = ticket.updates[ticket.updates.length - 1];
       return {
         user: lastUpdate.user,
         date: lastUpdate.date,
-        action: 'Diedit oleh',
+        isEdit: true,
       };
     }
     return {
-      user: 'System / Owner',
+      user: '',
       date: ticket.createdAt,
-      action: 'Dibuat oleh',
+      isEdit: false,
     };
   };
 
+  // --- M3 BADGE COLORS ---
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open':
+        return 'bg-[#D3E3FD] text-[#041E49] border-[#041E49]/10'; // Surface Tint Blue
+      case 'process':
+        return 'bg-[#FFEB3B]/30 text-[#625B00] border-[#625B00]/10'; // Surface Tint Yellow
+      case 'closed':
+        return 'bg-[#C4EED0] text-[#0A3818] border-[#0A3818]/10'; // Surface Tint Green
+      default:
+        return 'bg-[#E6E0E9] text-[#49454F] border-[#49454F]/10';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'Critical':
+        return 'bg-[#FFD8E4] text-[#31111D] border-[#31111D]/10'; // Error Container
+      case 'Major':
+        return 'bg-[#FFDCC2] text-[#2E1500] border-[#2E1500]/10'; // Tertiary Container
+      case 'Minor':
+        return 'bg-[#E8DEF8] text-[#1D192B] border-[#1D192B]/10'; // Secondary Container
+      default:
+        return 'bg-[#F4EFF4] text-[#1C1B1F] border-[#1C1B1F]/10';
+    }
+  };
+
+  // --- FILTER & SORT LOGIC ---
   const filteredTickets = useMemo(() => {
-    const safeTickets = (tickets as Ticket[]) || [];
+    const safeTickets = (tickets as TicketTrouble[]) || [];
     let data = [...safeTickets];
 
     if (query) {
       const q = query.toLowerCase();
       data = data.filter(
-        (t) => t.title.toLowerCase().includes(q) || t.id.toString().includes(q),
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.id.toString().includes(q) ||
+          (t.siteId && t.siteId.toLowerCase().includes(q)),
       );
     }
 
@@ -81,6 +116,7 @@ export default function TicketList({ query }: { query: string }) {
     return data;
   }, [tickets, query, filterStatus, sortDate]);
 
+  // --- PAGINATION LOGIC ---
   const paginatedTickets = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredTickets.slice(startIndex, startIndex + itemsPerPage);
@@ -88,6 +124,7 @@ export default function TicketList({ query }: { query: string }) {
 
   const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
 
+  // --- HANDLERS ---
   const onTrashClick = (id: string | number) => {
     setSelectedId(id.toString());
     setIsModalOpen(true);
@@ -95,7 +132,6 @@ export default function TicketList({ query }: { query: string }) {
 
   const handleDelete = async () => {
     if (!selectedId) return;
-    setIsModalOpen(false);
     const tid = toast.loading('Menghapus...');
     try {
       await deleteTicket(selectedId);
@@ -103,23 +139,12 @@ export default function TicketList({ query }: { query: string }) {
     } catch (err: any) {
       toast.error(err.message || 'Gagal menghapus', { id: tid });
     } finally {
+      setIsModalOpen(false);
       setSelectedId(null);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-[#D3E3FD] text-[#041E49] border-[#041E49]/10';
-      case 'process':
-        return 'bg-[#FFEB3B]/30 text-[#625B00] border-[#625B00]/10';
-      case 'closed':
-        return 'bg-[#E1E2E1] text-[#1C1B1F] border-[#1C1B1F]/10';
-      default:
-        return 'bg-[#E6E0E9] text-[#49454F] border-[#49454F]/10';
-    }
-  };
-
+  // --- RENDER LOADING ---
   if (isLoading) {
     return (
       <div className="w-full bg-[#FEF7FF] rounded-[24px] p-6 space-y-4 border border-[#CAC4D0]">
@@ -133,8 +158,10 @@ export default function TicketList({ query }: { query: string }) {
     );
   }
 
+  // --- RENDER CONTENT ---
   return (
     <div className="mt-4 space-y-4">
+      {/* === FILTER BAR === */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#FEF7FF] p-4 rounded-[24px] border border-[#CAC4D0]/50 shadow-sm">
         <div className="flex items-center gap-2 text-sm text-[#49454F]">
           <span className="bg-[#E8DEF8] text-[#1D192B] font-bold px-3 py-1 rounded-full text-xs">
@@ -144,6 +171,7 @@ export default function TicketList({ query }: { query: string }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          {/* Sort Date */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <ArrowUpDown size={14} className="text-[#6750A4]" />
@@ -158,6 +186,7 @@ export default function TicketList({ query }: { query: string }) {
             </select>
           </div>
 
+          {/* Filter Status */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <Filter size={14} className="text-[#6750A4]" />
@@ -179,6 +208,7 @@ export default function TicketList({ query }: { query: string }) {
         </div>
       </div>
 
+      {/* === TABLE === */}
       <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -187,9 +217,11 @@ export default function TicketList({ query }: { query: string }) {
                 <th className="px-6 py-4 font-bold tracking-wider">
                   Tiket Info
                 </th>
+                <th className="px-6 py-4 font-bold tracking-wider">Pelapor</th>
                 <th className="px-6 py-4 font-bold tracking-wider">Status</th>
+                <th className="px-6 py-4 font-bold tracking-wider">Priority</th>
                 <th className="px-6 py-4 font-bold tracking-wider">
-                  Aktivitas Terakhir
+                  Update Terakhir
                 </th>
                 <th className="px-6 py-4 font-bold tracking-wider text-right">
                   Aksi
@@ -200,105 +232,130 @@ export default function TicketList({ query }: { query: string }) {
               {paginatedTickets.length > 0 ? (
                 paginatedTickets.map((t) => {
                   const activity = getLastActivity(t);
-                  // LOGIKA BARU: Ambil foto pertama saja sebagai thumbnail
+
                   const thumbnail =
-                    t.images && t.images.length > 0 ? t.images[0] : null;
+                    t.images && t.images.length > 0
+                      ? t.images[0]
+                      : (t as any).image || null;
+
+                  const mainReporter =
+                    t.reporters && t.reporters.length > 0
+                      ? t.reporters[0]
+                      : 'System';
 
                   return (
                     <tr
                       key={t.id}
                       className="group bg-[#FEF7FF] hover:bg-[#F3EDF7] transition-colors duration-200"
                     >
+                      {/* KOLOM 1: INFO */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-[12px] bg-[#E6E0E9] overflow-hidden border border-[#CAC4D0] shrink-0">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-[12px] bg-[#E6E0E9] overflow-hidden border border-[#CAC4D0] shrink-0 mt-1">
                             <img
-                              // Ganti t.image dengan variable thumbnail
                               src={
                                 thumbnail || 'https://placehold.co/100?text=?'
                               }
                               alt="thumb"
-                              className="h-full w-full object-cover"
+                              className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="max-w-[200px] sm:max-w-xs">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-[10px] bg-[#E8DEF8] text-[#1D192B] px-1.5 py-0.5 rounded font-bold">
-                                #{t.id}
-                              </span>
-                            </div>
+                          <div className="max-w-[240px] flex flex-col gap-1">
+                            <span className="text-[10px] bg-[#E8DEF8] text-[#1D192B] px-1.5 py-0.5 rounded font-bold w-fit">
+                              #{t.id}
+                            </span>
                             <Link
-                              href={`/tickets/${t.id}`}
-                              className="font-semibold text-[#1C1B1F] text-base hover:text-[#6750A4] transition-colors line-clamp-1"
+                              href={`/operasional/tickets/trouble/detail/${t.id}`}
+                              className="font-semibold text-[#1C1B1F] text-base hover:text-[#6750A4] transition-colors line-clamp-1 block"
                             >
                               {t.title}
                             </Link>
-                            <p className="text-[#49454F] text-xs line-clamp-1 mt-0.5">
-                              {t.description}
-                            </p>
+                            {t.siteId && (
+                              <span className="flex items-center gap-1 text-[11px] text-[#49454F] font-medium">
+                                <MapPin size={12} className="text-[#6750A4]" />{' '}
+                                {t.siteId}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
 
+                      {/* KOLOM 2: PELAPOR */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-[#1D1B20]">
+                          <div className="bg-[#E6E0E9] p-1.5 rounded-full">
+                            <User size={14} className="text-[#49454F]" />
+                          </div>
+                          <span className="text-xs font-semibold">
+                            {mainReporter}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* KOLOM 3: STATUS */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(t.status)}`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(t.status)}`}
                         >
                           {t.status}
                         </span>
                       </td>
 
+                      {/* KOLOM 4: PRIORITY */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-row gap-8">
+                        {t.priority && (
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${getPriorityColor(t.priority)}`}
+                          >
+                            <AlertCircle size={12} />
+                            {t.priority}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* KOLOM 5: ACTIVITY */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 text-[#49454F]">
-                            {activity.action === 'Diedit oleh' ? (
-                              <History size={14} className="text-[#006391]" />
-                            ) : (
-                              <Calendar size={14} className="text-[#6750A4]" />
-                            )}
+                            <Calendar size={14} className="text-[#6750A4]" />
                             <span className="font-medium text-xs">
                               {activity.date ? formatDate(activity.date) : '-'}
                             </span>
                           </div>
-
-                          <div
-                            className={`flex items-center gap-2 px-2 py-1 rounded-lg w-fit ${
-                              activity.action === 'Diedit oleh'
-                                ? 'bg-[#C2E7FF]/40 text-[#001D32]'
-                                : 'bg-[#E6E0E9]/50 text-[#1D1B20]'
-                            }`}
-                          >
-                            <User size={12} />
-                            <div className="flex flex-col leading-none">
-                              <span className="text-[9px] uppercase tracking-wider opacity-70 mb-0.5">
-                                {activity.action}
-                              </span>
-                              <span className="text-[11px] font-bold truncate max-w-[120px]">
-                                {activity.user}
+                          {activity.isEdit && (
+                            <div className="flex items-center gap-1 text-[#006391] bg-[#C2E7FF]/30 px-2 py-0.5 rounded w-fit">
+                              <History size={10} />
+                              <span className="text-[10px] font-medium">
+                                Diedit: {activity.user}
                               </span>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </td>
 
+                      {/* KOLOM 6: ACTIONS */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
                           <Link
-                            href={`/tickets/${t.id}`}
+                            href={`/operasional/tickets/trouble/detail/${t.id}`}
                             className="p-2 text-[#49454F] bg-[#F2F2F2] hover:bg-[#E0E0E0] rounded-full transition-all border border-[#CAC4D0]/30"
                             title="Lihat Detail"
                           >
                             <Eye size={18} />
                           </Link>
+
+                          {/* [FIX] Link Edit: Menggunakan stopPropagation agar klik tidak tembus */}
                           <Link
-                            href={`/tickets/edit/${t.id}`}
-                            className="p-2 text-[#6750A4] bg-[#F3EDF7] hover:bg-[#E8DEF8] rounded-full transition-all border border-[#E8DEF8]"
+                            href={`/operasional/tickets/trouble/edit/${t.id}`}
+                            className="p-2 text-[#6750A4] bg-[#F3EDF7] hover:bg-[#E8DEF8] rounded-full transition-all border border-[#E8DEF8] relative z-10"
                             title="Edit"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <Edit3 size={18} />
                           </Link>
+
                           <button
-                            onClick={() => onTrashClick(t.id!)}
+                            onClick={() => t.id && onTrashClick(t.id)}
                             className="p-2 text-[#B3261E] bg-[#FFF8F6] hover:bg-[#FFDAD6] rounded-full transition-all border border-[#FFDAD6]"
                             title="Hapus"
                           >
@@ -310,8 +367,9 @@ export default function TicketList({ query }: { query: string }) {
                   );
                 })
               ) : (
+                // EMPTY STATE
                 <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center">
+                  <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center text-[#49454F]">
                       <div className="bg-[#F3EDF7] p-4 rounded-full mb-3">
                         <Search size={24} className="text-[#CAC4D0]" />
@@ -325,6 +383,7 @@ export default function TicketList({ query }: { query: string }) {
           </table>
         </div>
 
+        {/* === PAGINATION === */}
         {filteredTickets.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 bg-[#F3EDF7] border-t border-[#E6E0E9]">
             <div className="text-xs text-[#49454F] font-medium">
@@ -352,6 +411,7 @@ export default function TicketList({ query }: { query: string }) {
         )}
       </div>
 
+      {/* === CONFIRM DIALOG === */}
       <ConfirmDialog
         isOpen={isModalOpen}
         title="Hapus Tiket?"
