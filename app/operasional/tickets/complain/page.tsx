@@ -2,9 +2,9 @@
 
 import { use } from 'react';
 import PageTitle from '@/components/layouts/PageTitle';
-import MaintenanceList from '@/components/modules/tickets/maintenance/MaintenanceList';
+import ComplainList from '@/components/modules/tickets/complain/ComplainList';
 
-export default function MaintenancePage({
+export default function ComplainPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -17,17 +17,13 @@ export default function MaintenancePage({
       {/* Container */}
       <div className="max-w-7xl mx-auto space-y-6">
         <PageTitle
-          title="Menejemen Pemeliharaan"
-          description="Kelola jadwal pemeliharaan jaringan dan perangkat."
-          actionButton={{
-            link: '/operasional/tickets/maintenance/create',
-            label: 'Jadwal Baru',
-          }}
+          title="Menejemen Komplain Pemirsa"
+          description="Pantau dan tindak lanjuti laporan gangguan serta keluhan layanan dari pemirsa."
         />
 
         {/* Wrapper animasi in */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MaintenanceList query={query} />
+          <ComplainList query={query} />
         </div>
       </div>
     </div>

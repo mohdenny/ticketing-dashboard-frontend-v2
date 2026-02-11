@@ -13,12 +13,10 @@ export default function TicketsPage({
   const query = resolvedSearchParams.q || '';
 
   return (
-    // M3 Standard: Menggunakan Background #FDFCFF dan layout yang sama persis dengan MaintenancePage
     <div className="min-h-screen bg-[#FDFCFF] p-6 md:p-8">
-      {/* Container: Konsisten menggunakan max-w-7xl (sebelumnya 5xl) agar lebar tabel seragam */}
       <div className="max-w-7xl mx-auto space-y-6">
         <PageTitle
-          title="Manajemen Tiket"
+          title="Manajemen Tiket Kendala"
           description="Semua laporan dukungan operasional dalam satu tempat."
           actionButton={{
             link: '/operasional/tickets/trouble/create',
@@ -26,7 +24,7 @@ export default function TicketsPage({
           }}
         />
 
-        {/* Wrapper animasi konsisten tanpa Card tambahan (Card sudah ada di dalam List) */}
+        {/* Wrapper animasi in*/}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <TicketTroubleList query={query} />
         </div>

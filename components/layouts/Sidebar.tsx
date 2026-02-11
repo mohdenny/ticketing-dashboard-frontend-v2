@@ -64,18 +64,18 @@ export default function Sidebar() {
       groupIcon: BriefcaseBusiness,
       items: [
         {
-          name: 'Trouble Ticket',
+          name: 'Tiket Kendala',
           href: '/operasional/tickets/trouble',
           icon: TicketX,
         },
         {
-          name: 'Maintenance Request',
+          name: 'Pemeliharaan',
           href: '/operasional/tickets/maintenance',
           icon: Wrench,
         },
         {
           name: 'Komplain Pemirsa',
-          href: '/operasional/komplain',
+          href: '/operasional/tickets/complain',
           icon: MessageSquareWarning,
         },
         { name: 'Log Aktivitas', href: '/operasional/log', icon: ScrollText }, // Gulungan kertas log history
@@ -88,7 +88,7 @@ export default function Sidebar() {
       items: [
         {
           name: 'Pemancar Digital',
-          href: '/monitoring/tx-digital',
+          href: '/monitoring/transmitter/digital',
           icon: RadioTower,
         },
         {

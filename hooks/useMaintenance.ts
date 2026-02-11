@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MaintenanceFormValues } from '@/schemas/maintenanceSchema';
-import { MaintenanceTicket } from '@/types/maintenance'; // [FIX] Import Type
+import { MaintenanceTicket } from '@/types/maintenance';
 
 export const useMaintenance = () => {
   const queryClient = useQueryClient();

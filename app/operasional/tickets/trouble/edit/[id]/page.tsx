@@ -5,7 +5,7 @@ import { useTicketDetail, useTickets } from '@/hooks/useTickets';
 // [FIX] Gunakan tipe dari schema trouble ticket yang spesifik
 import { TicketTroubleFormValues } from '@/schemas/ticketTroubleSchema';
 import { useMemo } from 'react';
-import TicketTroubleForm from '@/components/modules/tickets/TicketTroubleForm'; // Pastikan path import sesuai struktur folder Anda
+import TicketTroubleForm from '@/components/modules/tickets/trouble/TicketTroubleForm'; // Pastikan path import sesuai struktur folder Anda
 import Timeline, { TimelineEvent } from '@/components/ui/timeline';
 import { CancelAction } from '@/components/layouts/CancelAction';
 import { Loader2, History } from 'lucide-react';

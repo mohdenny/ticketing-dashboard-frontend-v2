@@ -21,14 +21,13 @@ import {
 } from 'lucide-react';
 import ConfirmDialog from '@/components/layouts/ConfirmDialog';
 
-// Asumsi tipe data (sesuaikan jika ada properti yang berbeda di interface asli)
 interface MaintenanceTicket {
   id: string;
   title: string;
   siteId?: string;
-  startTime: string; // atau scheduleDate
+  startTime: string;
   status: string;
-  troubleSource?: string; // atau category
+  troubleSource?: string;
   networkElement?: string;
   statusTx?: string;
   createdAt: string;
@@ -37,7 +36,7 @@ interface MaintenanceTicket {
 export default function MaintenanceList({ query }: { query: string }) {
   const { maintenanceTickets, isLoading, deleteMaintenance } = useMaintenance();
 
-  // --- STATE MANAGEMENT (Disamakan dengan TicketTroubleList) ---
+  // State management
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortDate, setSortDate] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,7 +55,7 @@ export default function MaintenanceList({ query }: { query: string }) {
     });
   };
 
-  // --- HELPER COLORS (M3 Palette) ---
+  // Helper colors
   const getStatusColor = (status: string) => {
     const s = status.toLowerCase();
     if (s.includes('open') || s.includes('schedule')) {
@@ -75,12 +74,12 @@ export default function MaintenanceList({ query }: { query: string }) {
     return 'bg-[#E6E0E9] text-[#49454F] border-[#49454F]/10'; // Default Gray
   };
 
-  // --- FILTERING & SORTING LOGIC ---
+  // Filtering dan sorting
   const filteredMaintenance = useMemo(() => {
     const safeData = (maintenanceTickets as MaintenanceTicket[]) || [];
     let data = [...safeData];
 
-    // 1. Search Query
+    // Search Query
     if (query) {
       const q = query.toLowerCase();
       data = data.filter(
@@ -92,7 +91,7 @@ export default function MaintenanceList({ query }: { query: string }) {
       );
     }
 
-    // 2. Filter Status
+    // Filter Status
     if (filterStatus !== 'all') {
       // Normalisasi status agar pencocokan lebih fleksibel
       data = data.filter((t) => {
@@ -108,9 +107,8 @@ export default function MaintenanceList({ query }: { query: string }) {
       });
     }
 
-    // 3. Sort Date
+    // Sort Date
     data.sort((a, b) => {
-      // Gunakan startTime (Jadwal) atau createdAt sebagai acuan sort
       const dateA = new Date(a.startTime || a.createdAt).getTime();
       const dateB = new Date(b.startTime || b.createdAt).getTime();
       return sortDate === 'desc' ? dateB - dateA : dateA - dateB;
@@ -119,7 +117,7 @@ export default function MaintenanceList({ query }: { query: string }) {
     return data;
   }, [maintenanceTickets, query, filterStatus, sortDate]);
 
-  // --- PAGINATION LOGIC ---
+  // Pagination
   const paginatedTickets = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredMaintenance.slice(startIndex, startIndex + itemsPerPage);
@@ -127,7 +125,7 @@ export default function MaintenanceList({ query }: { query: string }) {
 
   const totalPages = Math.ceil(filteredMaintenance.length / itemsPerPage);
 
-  // --- HANDLERS ---
+  // Handlers
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
     setIsDeleteOpen(true);
@@ -148,7 +146,7 @@ export default function MaintenanceList({ query }: { query: string }) {
     }
   };
 
-  // --- RENDER LOADING ---
+  // Render loading
   if (isLoading) {
     return (
       <div className="w-full bg-[#FEF7FF] rounded-[24px] p-6 space-y-4 border border-[#CAC4D0]">
@@ -162,10 +160,10 @@ export default function MaintenanceList({ query }: { query: string }) {
     );
   }
 
-  // --- RENDER MAIN CONTENT ---
+  //Main content
   return (
     <div className="mt-4 space-y-4">
-      {/* === FILTER BAR (Consistent M3) === */}
+      {/* Filter bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#FEF7FF] p-4 rounded-[24px] border border-[#CAC4D0]/50 shadow-sm">
         <div className="flex items-center gap-2 text-sm text-[#49454F]">
           <span className="bg-[#E8DEF8] text-[#1D192B] font-bold px-3 py-1 rounded-full text-xs">
@@ -175,7 +173,7 @@ export default function MaintenanceList({ query }: { query: string }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          {/* Sort Date */}
+          {/* Sort date */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <ArrowUpDown size={14} className="text-[#6750A4]" />
@@ -185,12 +183,12 @@ export default function MaintenanceList({ query }: { query: string }) {
               onChange={(e) => setSortDate(e.target.value)}
               className="appearance-none bg-[#F3EDF7] hover:bg-[#E8DEF8] transition-colors pl-9 pr-8 py-2.5 rounded-xl text-sm font-medium text-[#1D1B20] outline-none focus:ring-2 focus:ring-[#6750A4] cursor-pointer border-none min-w-[140px]"
             >
-              <option value="desc">Jadwal Terbaru</option>
-              <option value="asc">Jadwal Terlama</option>
+              <option value="desc">Terbaru</option>
+              <option value="asc">Terlama</option>
             </select>
           </div>
 
-          {/* Filter Status */}
+          {/* Filter status */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <Filter size={14} className="text-[#6750A4]" />
@@ -212,7 +210,7 @@ export default function MaintenanceList({ query }: { query: string }) {
         </div>
       </div>
 
-      {/* === TABLE SECTION === */}
+      {/* Table section */}
       <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -238,15 +236,15 @@ export default function MaintenanceList({ query }: { query: string }) {
                     key={t.id}
                     className="group bg-[#FEF7FF] hover:bg-[#F3EDF7] transition-colors duration-200"
                   >
-                    {/* KOLOM 1: INFO UTAMA */}
+                    {/* Kolom utama */}
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        {/* ID Badge */}
+                        {/* ID badge */}
                         <span className="text-[10px] bg-[#E8DEF8] text-[#1D192B] px-1.5 py-0.5 rounded font-bold w-fit">
                           #{t.id}
                         </span>
 
-                        {/* Title Link */}
+                        {/* Title link */}
                         <Link
                           href={`/operasional/tickets/maintenance/detail/${t.id}`}
                           className="font-semibold text-[#1C1B1F] text-base hover:text-[#6750A4] transition-colors line-clamp-1 block"
@@ -254,7 +252,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                           {t.title}
                         </Link>
 
-                        {/* Sub Info (Site ID & Network Elements) */}
+                        {/* Sub info */}
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
                           {t.siteId && (
                             <span className="flex items-center gap-1">
@@ -282,7 +280,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                       </div>
                     </td>
 
-                    {/* KOLOM 2: SOURCE / CATEGORY */}
+                    {/* Kolom 2 kategori */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       {t.troubleSource ? (
                         <div className="flex items-center gap-2 text-[#1D1B20]">
@@ -301,7 +299,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                       )}
                     </td>
 
-                    {/* KOLOM 3: JADWAL */}
+                    {/* Kolom 3 jadwal pengerjaan */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2 text-[#49454F]">
                         <Calendar size={14} className="text-[#6750A4]" />
@@ -311,7 +309,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                       </div>
                     </td>
 
-                    {/* KOLOM 4: STATUS */}
+                    {/* Kolom 4 status */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(t.status)}`}
@@ -320,11 +318,11 @@ export default function MaintenanceList({ query }: { query: string }) {
                       </span>
                     </td>
 
-                    {/* KOLOM 5: AKSI */}
+                    {/* Kolom 5 aksi */}
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end items-center gap-2">
                         <Link
-                          href={`/operasional/tickets/maintenance/${t.id}`}
+                          href={`/operasional/tickets/maintenance/detail/${t.id}`}
                           className="p-2 text-[#49454F] bg-[#F2F2F2] hover:bg-[#E0E0E0] rounded-full transition-all border border-[#CAC4D0]/30"
                           title="Lihat Detail"
                         >
@@ -351,7 +349,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                   </tr>
                 ))
               ) : (
-                // EMPTY STATE
+                // Empty state
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center text-[#49454F]">
@@ -369,7 +367,7 @@ export default function MaintenanceList({ query }: { query: string }) {
           </table>
         </div>
 
-        {/* === PAGINATION (Consistent M3) === */}
+        {/* Pagination */}
         {filteredMaintenance.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 bg-[#F3EDF7] border-t border-[#E6E0E9]">
             <div className="text-xs text-[#49454F] font-medium">
@@ -397,7 +395,7 @@ export default function MaintenanceList({ query }: { query: string }) {
         )}
       </div>
 
-      {/* === CONFIRM DIALOG === */}
+      {/* Confirm dialog*/}
       <ConfirmDialog
         isOpen={isDeleteOpen}
         title="Hapus Maintenance?"

@@ -1,10 +1,10 @@
 'use client';
 
 import { use } from 'react';
+import TicketTroubleList from '@/components/modules/tickets/trouble/TicketTroubleList';
 import PageTitle from '@/components/layouts/PageTitle';
-import MaintenanceList from '@/components/modules/tickets/maintenance/MaintenanceList';
 
-export default function MaintenancePage({
+export default function MonitoringTxDigitalPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -14,20 +14,19 @@ export default function MaintenancePage({
 
   return (
     <div className="min-h-screen bg-[#FDFCFF] p-6 md:p-8">
-      {/* Container */}
       <div className="max-w-7xl mx-auto space-y-6">
         <PageTitle
-          title="Menejemen Pemeliharaan"
-          description="Kelola jadwal pemeliharaan jaringan dan perangkat."
+          title="Monitoring Grafik NEC 10.9kW – Site Surabaya"
+          description="Pantau performa dan log infrastruktur pemancar."
           actionButton={{
-            link: '/operasional/tickets/maintenance/create',
-            label: 'Jadwal Baru',
+            link: '/operasional/tickets/trouble/create',
+            label: 'Input Content',
           }}
         />
 
-        {/* Wrapper animasi in */}
+        {/* Wrapper animasi in*/}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <MaintenanceList query={query} />
+          <TicketTroubleList query={query} />
         </div>
       </div>
     </div>

@@ -47,47 +47,7 @@ export type TicketUpdateLog = {
 // Data ini akan reset setiap kali server Next.js restart (save file).
 // Dalam production, ganti array ini dengan Database (Prisma/MySQL/Mongo).
 
-let maintenanceTickets: MaintenanceTicket[] = [
-  {
-    id: 'MT-1707621',
-    title: 'PM Genset Rutin Site Depok',
-    troubleSource: 'Internal',
-    category: 'Preventive',
-    siteId: 'DPK001',
-    startTime: new Date().toISOString(),
-    pic: 'Budi Santoso',
-    networkElement: 'Genset Perkins',
-    statusTx: 'On Air',
-    impactTx: 'None',
-    estimasiDowntime: '0 Jam',
-    probableCause: '-',
-    broadcastExplanation: 'Pengecekan rutin filter oli dan solar',
-    images: [],
-    status: 'process',
-    runHours: '1240.5',
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // Kemarin
-    updatedAt: new Date().toISOString(),
-    updates: [
-      {
-        id: 'LOG-1',
-        date: new Date(Date.now() - 86400000).toISOString(),
-        user: 'System',
-        status: 'Scheduled',
-        description: 'Tiket dibuat otomatis oleh sistem jadwal.',
-        images: [],
-      },
-      {
-        id: 'LOG-2',
-        date: new Date().toISOString(),
-        user: 'Budi Santoso',
-        status: 'process',
-        description:
-          'Sedang melakukan penggantian filter oli. Genset running test normal.',
-        images: [],
-      },
-    ],
-  },
-];
+let maintenanceTickets: MaintenanceTicket[] = [];
 
 // --- 3. API HANDLERS ---
 

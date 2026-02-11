@@ -38,23 +38,14 @@ export default async function RootLayout({
 
   return (
     <html lang="id">
-      {/* Hapus w-screen, gunakan max-w-full.
-        antialiased agar font lebih tajam.
-      */}
       <body className="min-h-screen max-w-full bg-[#F3EDF7] antialiased overflow-x-hidden">
         <Providers initialUser={initialUser}>
           <div className="flex h-screen w-full overflow-hidden relative">
-            {/* Sidebar: Otomatis hilang di mobile via usePathname & Tailwind hidden md:flex */}
+            {/* Sidebar otomatis hidden di hp via usePathname dan Tailwind "hidden md:flex" */}
             <Sidebar />
 
             <div className="flex flex-col flex-1 min-w-0 h-full relative overflow-hidden">
               <Header />
-
-              {/* Main Content:
-                - flex-1 agar mengambil sisa ruang.
-                - overflow-y-auto agar bisa scroll vertikal.
-                - pb-24 untuk memberi ruang bagi BottomNav di mobile.
-              */}
               <main className="flex-1 overflow-y-auto overflow-x-hidden p-0 md:p-0">
                 <div className="w-full min-h-full pb-24 md:pb-0">
                   {children}
@@ -62,7 +53,7 @@ export default async function RootLayout({
               </main>
             </div>
 
-            {/* BottomNav: Hanya muncul di mobile */}
+            {/* BottomNav otomatis muncul di hp */}
             <BottomNav />
           </div>
 
