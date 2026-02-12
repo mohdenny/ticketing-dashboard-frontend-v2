@@ -4,7 +4,6 @@ import { Plus } from 'lucide-react'; // Gunakan library icon seperti lucide
 interface PageTitleProps {
   title: string;
   description: string;
-  // Menggunakan Object agar lebih deskriptif
   actionButton?: {
     link: string;
     label: string;
@@ -17,7 +16,7 @@ export default function PageTitle({
   actionButton,
 }: PageTitleProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-2">
       <div>
         <h1 className="text-[32px] font-medium text-[#1C1B1F] tracking-tight leading-tight">
           {title}

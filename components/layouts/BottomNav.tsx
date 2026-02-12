@@ -13,10 +13,10 @@ export default function BottomNav() {
 
   const items = [
     { name: 'Beranda', href: '/', icon: LayoutDashboard },
-    { name: 'Tiket', href: '/operasional/tickets', icon: Ticket },
+    { name: 'Tiket', href: '/operational/tickets', icon: Ticket },
     {
       name: 'Tambah',
-      href: '/operasional/tickets/trouble/create',
+      href: '/operational/tickets/trouble/create',
       icon: Plus,
       isFAB: true,
     },

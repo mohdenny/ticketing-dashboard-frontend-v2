@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { authSchema } from '@/schemas/authSchema';
+import { authSchema } from '@/schemas/auth/login';
 import { MOCK_USERS } from '@/lib/mockData';
 
 export const POST = async (request: Request) => {

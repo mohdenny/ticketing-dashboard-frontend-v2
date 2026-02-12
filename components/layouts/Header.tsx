@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { Search, LogOut, User } from 'lucide-react';
 
 export default function Header() {
@@ -25,7 +25,7 @@ export default function Header() {
 
     // Gunakan router.push dengan shallow routing jika memungkinkan
     // atau arahkan langsung ke list tiket dengan query
-    router.push(`/operasional/tickets?q=${encodeURIComponent(keyword.trim())}`);
+    router.push(`/operational/tickets?q=${encodeURIComponent(keyword.trim())}`);
   };
 
   const onLogoutClick = async () => {

@@ -1,10 +1,10 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { authSchema, AuthFormValues } from '@/schemas/authSchema';
+import { authSchema, AuthFormValues } from '@/schemas/auth/login';
 
 import {
   Form,

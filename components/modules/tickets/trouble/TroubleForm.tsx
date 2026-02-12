@@ -24,40 +24,35 @@ import {
 import { useState, ChangeEvent, useEffect } from 'react';
 import { useUsers } from '@/hooks/tickets/useTrouble';
 
-interface HistoryData {
-  description: string;
-  user: string;
-  reporters?: string[];
-  images?: string[];
-  status: 'open' | 'process' | 'closed';
-}
-
-interface TicketTroubleFormProps {
+// Interface Props disederhanakan (HistoryData dihapus karena sudah merge di TroubleFormValues)
+interface TroubleFormProps {
   initialData?: any;
-  onSubmit: (data: any, history?: HistoryData) => void;
+  onSubmit: (data: TroubleFormValues) => void;
   isLoading?: boolean;
+  isEditMode?: boolean; // Opsional: untuk penanda eksplisit
 }
 
-export default function ComplainForm({
+export default function TroubleForm({
   initialData,
   onSubmit,
   isLoading,
-}: TicketTroubleFormProps) {
+}: TroubleFormProps) {
   const { data: userList } = useUsers();
 
-  // State management
+  // State management Images
   const [mainImages, setMainImages] = useState<string[]>(
     initialData?.images || [],
   );
+  // State untuk images saat update progress
   const [updateImages, setUpdateImages] = useState<string[]>([]);
 
-  // State Pelapor Awal
+  // State Pelapor Awal (Create Mode / Read Only di Edit)
   const [reporters, setReporters] = useState<string[]>(
     initialData?.reporters ||
       (initialData?.assignedUser ? [initialData.assignedUser] : []),
   );
 
-  // State Pelapor Update (Edit Mode)
+  // State Pelapor Update (Khusus Edit Mode)
   const [updateReporters, setUpdateReporters] = useState<string[]>([]);
 
   // State Input Manual (External)
@@ -73,12 +68,13 @@ export default function ComplainForm({
     setValue,
     trigger,
     formState: { errors },
-  } = useForm<TroubleFormValues | any>({
+  } = useForm<TroubleFormValues>({
     resolver: zodResolver(troubleSchema),
     defaultValues: {
       title: initialData?.title || '',
       siteId: initialData?.siteId || '',
       description: initialData?.description || '',
+      // Logic status: Jika data ada dan status 'open', ubah default ke 'process' agar user langsung update
       status: initialData
         ? initialData.status === 'open'
           ? 'process'
@@ -90,31 +86,36 @@ export default function ComplainForm({
       runHours: initialData?.runHours || '',
       statusTx: initialData?.statusTx || '',
       duration: initialData?.duration || '',
-      historyNote: '',
-      historyReporters: [],
-      historyImages: [],
+      reporters: initialData?.reporters || [],
+      // Field Update / History (Sesuai Schema Baru)
+      updateDescription: '',
+      updateReporters: [],
+      updateImages: [],
     },
   });
 
-  // Sync state ke form
+  // Sync state reporters awal ke form
   useEffect(() => {
     setValue('reporters', reporters);
-    if (reporters.length > 0) trigger('reporters');
-  }, [reporters, setValue, trigger]);
+    if (reporters.length > 0 && !initialData) trigger('reporters');
+  }, [reporters, setValue, trigger, initialData]);
 
+  // Sync state updateReporters ke form field 'updateReporters'
   useEffect(() => {
-    setValue('historyReporters', updateReporters);
-    if (updateReporters.length > 0) trigger('historyReporters');
+    setValue('updateReporters', updateReporters);
+    // Trigger validasi hanya jika ada isinya atau user sedang berinteraksi
+    if (updateReporters.length > 0) trigger('updateReporters');
   }, [updateReporters, setValue, trigger]);
 
-  // Handlers
+  // Handler - Add Reporter Awal
   const handleAddReporter = (value: string) => {
     if (value === 'external') {
       setIsExternalInput(true);
       return;
     }
-    if (value && !reporters.includes(value))
+    if (value && !reporters.includes(value)) {
       setReporters([...reporters, value]);
+    }
   };
 
   const handleAddExternalReporter = () => {
@@ -130,13 +131,15 @@ export default function ComplainForm({
     setReporters(reporters.filter((_, i) => i !== index));
   };
 
+  // Handler - Add Reporter Update
   const handleAddUpdateReporter = (value: string) => {
     if (value === 'external') {
       setIsUpdateExternalInput(true);
       return;
     }
-    if (value && !updateReporters.includes(value))
+    if (value && !updateReporters.includes(value)) {
       setUpdateReporters([...updateReporters, value]);
+    }
   };
 
   const handleAddUpdateExternalReporter = () => {
@@ -153,16 +156,20 @@ export default function ComplainForm({
     setUpdateReporters(updateReporters.filter((_, i) => i !== index));
   };
 
+  // Handler Images
   const handleFileSelect = (
     e: ChangeEvent<HTMLInputElement>,
     target: 'main' | 'update',
   ) => {
     const files = e.target.files;
     if (!files) return;
+
     const currentCount =
       target === 'main' ? mainImages.length : updateImages.length;
     if (files.length + currentCount > 5) return alert(`Maksimal 5 foto.`);
+
     const newImagesPromises: Promise<string>[] = [];
+
     Array.from(files).forEach((file) => {
       if (file.size > 5 * 1024 * 1024) return alert('File Max 5MB');
       const promise = new Promise<string>((resolve) => {
@@ -172,14 +179,19 @@ export default function ComplainForm({
       });
       newImagesPromises.push(promise);
     });
+
     Promise.all(newImagesPromises).then((base64Images) => {
       if (target === 'main') {
-        setMainImages((prev) => [...prev, ...base64Images]);
-        setValue('images', [...mainImages, ...base64Images]);
+        const updated = [...mainImages, ...base64Images];
+        setMainImages(updated);
+        setValue('images', updated);
       } else {
-        setUpdateImages((prev) => [...prev, ...base64Images]);
+        const updated = [...updateImages, ...base64Images];
+        setUpdateImages(updated);
+        setValue('updateImages', updated); // Set ke field schema updateImages
       }
     });
+
     e.target.value = '';
   };
 
@@ -189,39 +201,40 @@ export default function ComplainForm({
       setMainImages(updated);
       setValue('images', updated);
     } else {
-      setUpdateImages((prev) => prev.filter((_, i) => i !== index));
+      const updated = updateImages.filter((_, i) => i !== index);
+      setUpdateImages(updated);
+      setValue('updateImages', updated);
     }
   };
 
-  const onFormSubmit = (data: any) => {
-    let historyPayload: HistoryData | undefined;
-    if (initialData) {
-      historyPayload = {
-        description: data.historyNote,
-        user: 'Current User',
-        reporters: updateReporters,
-        images: updateImages,
-        status: data.status,
-      };
-    }
-    const submitStatus = initialData ? data.status : 'open';
-    const finalData = {
+  // Final Submit Handler
+  const onFormSubmit = (data: TroubleFormValues) => {
+    // Sinkronisasi data akhir sebelum dikirim
+    const finalData: TroubleFormValues = {
       ...data,
-      status: submitStatus,
+      // Pastikan images utama terkirim (untuk create) atau data lama (untuk update)
       images: mainImages,
       reporters: reporters,
+      // Field update disuplai dari state lokal ke dalam objek data utama
+      // Jika initialData ada (Edit Mode), masukkan data update
+      ...(initialData && {
+        updateImages: updateImages,
+        updateReporters: updateReporters,
+        // updateDescription sudah ada di 'data' dari register form
+      }),
     };
-    onSubmit(finalData, historyPayload);
+
+    // Kirim satu objek utuh, tidak perlu parameter history terpisah
+    onSubmit(finalData);
   };
 
+  // M3 STYLE UTILS (TIDAK BERUBAH)
   const inputClass = (error?: any) =>
-    `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none
-    ${
+    `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none ${
       error
         ? 'border-[#B3261E] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E] bg-red-50/10'
         : 'border-[#79747E] bg-white hover:border-[#49454F] focus:border-[#6750A4] focus:ring-1 focus:ring-[#6750A4]'
     }`;
-
   const labelClass =
     'text-sm font-medium text-[#49454F] mb-2 block tracking-wide';
   const errorClass = 'text-xs text-[#B3261E] mt-1 ml-1 font-medium';
@@ -288,7 +301,8 @@ export default function ComplainForm({
               : 'bg-[#E8DEF8] text-[#1D192B] border-[#E8DEF8] hover:shadow-sm'
           }`}
         >
-          <User size={14} /> {rep}
+          <User size={14} />
+          {rep}
           {!readOnly && (
             <button
               type="button"
@@ -401,7 +415,6 @@ export default function ComplainForm({
           <p className={errorClass}>{errors.runHours.message as string}</p>
         )}
       </div>
-
       {/* Status TX */}
       <div>
         <label className={labelClass}>Status TX</label>
@@ -412,9 +425,9 @@ export default function ComplainForm({
             className={inputClass(errors.statusTx)}
           >
             <option value="">-- Pilih --</option>
-            <option value="Normal">Normal</option>
-            <option value="Trouble">Trouble</option>
-            <option value="Off">Off</option>
+            <option value="On Air">On Air</option>
+            <option value="Off Air">Off Air</option>
+            <option value="Degraded">Degraded</option>
           </select>
           {!readOnly && (
             <Activity
@@ -427,7 +440,6 @@ export default function ComplainForm({
           <p className={errorClass}>{errors.statusTx.message as string}</p>
         )}
       </div>
-
       {/* Duration */}
       <div>
         <label className={labelClass}>Durasi TX-OFF</label>
@@ -456,15 +468,13 @@ export default function ComplainForm({
     <button
       type="submit"
       disabled={isLoading}
-      className={`flex items-center justify-center gap-2 py-3 px-8 rounded-full font-medium text-sm tracking-wide shadow-sm hover:shadow-md transition-all active:scale-[0.98]
-      ${
+      className={`flex items-center justify-center gap-2 py-3 px-8 rounded-full font-medium text-sm tracking-wide shadow-sm hover:shadow-md transition-all active:scale-[0.98] ${
         isLoading
           ? 'bg-[#E7E0EC] text-[#1D192B] cursor-not-allowed'
           : 'bg-[#6750A4] text-white hover:bg-[#6750A4]/90'
-      }
-      ${initialData ? 'w-full' : 'w-full md:w-auto'}
-      disabled:bg-[#1D1B20]/10 disabled:text-[#1D1B20]/40 disabled:shadow-none
-      `}
+      } ${
+        initialData ? 'w-full' : 'w-full md:w-auto'
+      } disabled:bg-[#1D1B20]/10 disabled:text-[#1D1B20]/40 disabled:shadow-none `}
     >
       {isLoading ? (
         <Loader2 className="animate-spin" size={20} />
@@ -500,7 +510,6 @@ export default function ComplainForm({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-        {/* Kolom kiri */}
         <div
           className={`space-y-6 ${
             initialData ? 'opacity-80 pointer-events-none select-none' : ''
@@ -518,11 +527,11 @@ export default function ComplainForm({
                 className={inputClass(errors.title)}
               >
                 <option value="">Pilih Kategori...</option>
-                <option value="PLN Padam">PLN Padam</option>
-                <option value="PLN Drop Voltages">PLN Drop Voltages</option>
-                <option value="PLN Over Voltages">PLN Over Voltages</option>
-                <option value="PLN Phase Spin">PLN Phase Spin</option>
-                <option value="Cuaca Buruk">Cuaca Buruk</option>
+                <option value="Genset Fail">Genset Fail to Start</option>
+                <option value="Low Fuel">Low Fuel Level</option>
+                <option value="High Temp">High Temperature</option>
+                <option value="Mains Failure">Mains Failure</option>
+                <option value="Lainnya">Lainnya...</option>
               </select>
               {!initialData && (
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#79747E]">
@@ -637,7 +646,7 @@ export default function ComplainForm({
             )}
           </div>
 
-          {/* Jika Edit Mode, Show Lampiran Awal jadi Read only */}
+          {/* Jika Edit Mode, Show Lampiran Awal jadi Read Only */}
           {initialData && (
             <AttachmentSection
               images={mainImages}
@@ -646,10 +655,11 @@ export default function ComplainForm({
             />
           )}
 
+          {/* EDIT MODE: PINDAHKAN TECHNICAL FIELDS KE KIRI */}
           {initialData && <TechnicalFields readOnly={true} />}
         </div>
 
-        {/* Kolom kanan */}
+        {/* KOLOM KANAN */}
         <div className="space-y-6">
           {/* CREATE MODE: TECHNICAL FIELDS DI KANAN */}
           {!initialData && <TechnicalFields readOnly={false} />}
@@ -664,7 +674,7 @@ export default function ComplainForm({
             </>
           )}
 
-          {/* EDIT MODE: FORM UPDATE */}
+          {/* EDIT MODE: FORM UPDATE (Sinkronisasi Field Schema Baru) */}
           {initialData && (
             // M3 Surface Container: #F3EDF7 with larger radius
             <div className="bg-[#F3EDF7] p-6 rounded-[24px] space-y-6 animate-in slide-in-from-right-2 fade-in shadow-none border border-transparent">
@@ -694,7 +704,7 @@ export default function ComplainForm({
                 )}
               </div>
 
-              {/* Teknisi Update Field */}
+              {/* Teknisi Update Field (updateReporters) */}
               <div>
                 <label className={labelClass}>
                   Teknisi / Pelapor Update{' '}
@@ -711,26 +721,32 @@ export default function ComplainForm({
                   onCancelExternal={() => setIsUpdateExternalInput(false)}
                   externalValue={updateExternalName}
                   setExternalValue={setUpdateExternalName}
-                  error={errors.historyReporters?.message}
+                  error={errors.updateReporters?.message}
                 />
+                {errors.updateReporters && (
+                  <p className={errorClass}>
+                    {errors.updateReporters.message as string}
+                  </p>
+                )}
               </div>
 
-              {/* History Note Field */}
+              {/* Description / Note Field (updateDescription) */}
               <div>
                 <label className={labelClass}>
                   Catatan Pengerjaan <span className="text-[#B3261E]">*</span>
                 </label>
                 <textarea
-                  {...register('historyNote')}
+                  {...register('updateDescription')}
                   placeholder="Deskripsikan progress pengerjaan..."
                   rows={3}
                   className={
-                    inputClass(errors.historyNote) + ' resize-none text-sm'
+                    inputClass(errors.updateDescription) +
+                    ' resize-none text-sm'
                   }
                 />
-                {errors.historyNote && (
+                {errors.updateDescription && (
                   <p className={errorClass}>
-                    {errors.historyNote.message as string}
+                    {errors.updateDescription.message as string}
                   </p>
                 )}
               </div>

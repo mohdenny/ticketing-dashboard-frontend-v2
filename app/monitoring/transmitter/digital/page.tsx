@@ -94,7 +94,7 @@ const timeSeriesData = [
   },
 ];
 
-// --- 2. DUMMY DATA INPUT TABLE ---
+// Dummy data input table
 const inputChannels = [
   'BBS TV',
   'BN CHANNEL',
@@ -342,7 +342,7 @@ export default function MonitoringTxDigitalPage({
       <div className="max-w-7xl mx-auto space-y-6">
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-[#FEF7FF] p-4 rounded-[24px] border border-[#CAC4D0] shadow-sm">
-          {/* Sebelah kiri Title & Filter */}
+          {/* Sebelah kiri Title dan Filter */}
           <div className="flex flex-col gap-2">
             <h1 className="text-xl font-normal text-[#1D1B20]">
               Grafik Metering NEC 10,9KW (Digital){' '}
@@ -379,14 +379,14 @@ export default function MonitoringTxDigitalPage({
 
           {/* Sebelah kanan Action Buttons */}
           <div className="flex items-center gap-3 self-end lg:self-center">
-            {/* Tombol Input Content (Masuk ke Tabel) */}
+            {/* Tombol Input Content tampilan ke Table) */}
             <button
               onClick={() => setViewMode('input')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-[12px] text-sm font-medium transition-all shadow-sm active:scale-95
                 ${
                   viewMode === 'input'
-                    ? 'bg-[#4285F4] text-white ring-2 ring-offset-2 ring-[#4285F4]' // Biru Brand Google
-                    : 'bg-[#4285F4] text-white hover:bg-[#1a73e8]' // Biru interaktif untuk hover
+                    ? 'bg-[#4285F4] text-white ring-2 ring-offset-2 ring-[#4285F4]'
+                    : 'bg-[#4285F4] text-white hover:bg-[#1a73e8]'
                 }`}
             >
               <Edit size={18} /> Input Content

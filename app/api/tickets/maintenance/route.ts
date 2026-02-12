@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// --- 1. DEFINISI TIPE DATA (DATABASE SCHEMA MOCK) ---
 // Ini mencerminkan struktur data yang disimpan di database
 export type MaintenanceTicket = {
   id: string;

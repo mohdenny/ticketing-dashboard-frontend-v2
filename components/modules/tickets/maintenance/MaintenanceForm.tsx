@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   maintenanceSchema,
   MaintenanceFormValues,
-} from '@/schemas/maintenanceSchema';
+} from '@/schemas/tickets/maintenance';
 import {
   Save,
   Send,
@@ -29,7 +29,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useState, ChangeEvent, useEffect } from 'react';
-import { useUsers } from '@/hooks/useTickets';
+import { useUsers } from '@/hooks/tickets/useTrouble';
 
 // --- TYPES ---
 interface HistoryData {
@@ -175,7 +175,7 @@ export default function TicketMaintenanceForm({
     setUpdateReporters(updateReporters.filter((_, i) => i !== index));
   };
 
-  // --- HANDLERS (Files) ---
+  // HANDLERS (Files)
   const handleFileSelect = (
     e: ChangeEvent<HTMLInputElement>,
     target: 'main' | 'update',

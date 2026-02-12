@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { TicketTrouble, TicketTroubleUpdate } from '@/types/ticketTrouble';
-import { ticketTroubleSchema } from '@/schemas/ticketTroubleSchema';
+import { Trouble, TroubleHistory } from '@/types/tickets/trouble';
+import { troubleSchema } from '@/schemas/tickets/trouble';
 
-// Mock DB
-let tickets: TicketTrouble[] = [];
+// --- MOCK DATABASE ---
+let tickets: Trouble[] = [];
+// ---------------------
 
 export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url);
@@ -17,14 +18,21 @@ export const GET = async (request: Request) => {
       { status: 404 },
     );
   }
-  return NextResponse.json(tickets);
+
+  // Sort by newest
+  const sortedTickets = [...tickets].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
+
+  return NextResponse.json(sortedTickets);
 };
 
 export const POST = async (request: Request) => {
   try {
     const body = await request.json();
-    const validation = ticketTroubleSchema.safeParse(body);
 
+    // 1. Validasi Zod
+    const validation = troubleSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { message: 'Data tidak valid', errors: validation.error.format() },
@@ -32,33 +40,38 @@ export const POST = async (request: Request) => {
       );
     }
 
+    const data = validation.data;
     const now = new Date().toISOString();
-    const newTicket: TicketTrouble = {
-      id: Date.now(),
-      title: body.title,
-      siteId: body.siteId,
-      description: body.description || '',
-      status: 'open',
-      priority: body.priority || 'Minor',
-      images: body.images || [], // Foto Utama
-      startTime: body.startTime,
-      runHours: body.runHours || '',
-      statusTx: body.statusTx || '',
-      duration: body.duration || '',
-      reporters: body.reporters || [],
+
+    // 2. Construct Data Baru
+    const newTicket: Trouble = {
+      id: Date.now(), // Simple ID generation
+      title: data.title,
+      siteId: data.siteId,
+      description: data.description || '',
+      status: 'open', // Force open saat create
+      priority: data.priority,
+      startTime: data.startTime,
+      runHours: data.runHours,
+      statusTx: data.statusTx,
+      duration: data.duration,
+      reporters: data.reporters,
+      images: data.images || [],
       createdAt: now,
       updatedAt: now,
-      updates: [],
+      updates: [], // Array kosong saat inisiasi
     };
 
     tickets.push(newTicket);
+
     return NextResponse.json(
       { message: 'Tiket berhasil dibuat', data: newTicket },
       { status: 201 },
     );
   } catch (error) {
+    console.error('POST Error:', error);
     return NextResponse.json(
-      { message: 'Gagal memproses request' },
+      { message: 'Internal Server Error' },
       { status: 500 },
     );
   }
@@ -73,43 +86,53 @@ export const PUT = async (request: Request) => {
     if (!id)
       return NextResponse.json({ message: 'ID diperlukan' }, { status: 400 });
 
+    // 1. Validasi Zod
+    const validation = troubleSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          message: 'Data update tidak valid',
+          errors: validation.error.format(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const data = validation.data;
     const index = tickets.findIndex((t) => t.id.toString() === id.toString());
 
     if (index !== -1) {
-      const current = tickets[index];
+      const currentTicket = tickets[index];
       const now = new Date().toISOString();
 
-      // Tentukan Status Baru
-      const newStatus = body.status ? body.status : current.status;
+      // 2. Logic History Update
+      // Jika user mengirimkan updateDescription, kita anggap ini progress update
+      const newUpdates = [...currentTicket.updates];
 
-      let newUpdates = [...current.updates];
-
-      // Logic History Update
-      // Cek field history yang baru (historyDescription, historyImages, dll)
-      if (body.historyDescription && body.historyUser) {
-        const updateItem: TicketTroubleUpdate = {
+      if (data.status !== 'open' && data.updateDescription) {
+        const historyItem: TroubleHistory = {
           id: `upd-${Date.now()}`,
-          ticketId: current.id,
-          description: body.historyDescription,
           date: now,
-          user: body.historyUser,
-          // Ambil dari historyImages, BUKAN body.images
-          images: body.historyImages || [],
-          status: newStatus,
+          description: data.updateDescription,
+          reporters: data.updateReporters || [],
+          images: data.updateImages || [],
+          status: data.status,
         };
-        newUpdates.push(updateItem);
+        newUpdates.push(historyItem);
       }
 
-      // Update Data Utama
+      // 3. Update Data Utama
+      // Kita hanya mengupdate field yang boleh berubah (Dynamic fields)
       tickets[index] = {
-        ...current,
-        ...body, // Update field lain (runHours, statusTx, dll)
-        status: newStatus,
+        ...currentTicket,
+        status: data.status,
+        runHours: data.runHours || currentTicket.runHours,
+        statusTx: data.statusTx || currentTicket.statusTx,
+        duration: data.duration || currentTicket.duration,
+        // Images utama biasanya jarang diubah saat update progress,
+        // tapi jika fitur edit mengizinkan, gunakan: data.images || currentTicket.images
         updatedAt: now,
         updates: newUpdates,
-        // Pastikan images utama tetap mengambil body.images (jika diedit) atau tetap current.images
-        // Karena logic di useTickets sudah dipisah, body.images sekarang MURNI foto utama
-        images: body.images || current.images,
       };
 
       return NextResponse.json({
@@ -125,7 +148,7 @@ export const PUT = async (request: Request) => {
   } catch (error) {
     console.error('PUT Error:', error);
     return NextResponse.json(
-      { message: 'Terjadi kesalahan server' },
+      { message: 'Gagal memproses update' },
       { status: 500 },
     );
   }

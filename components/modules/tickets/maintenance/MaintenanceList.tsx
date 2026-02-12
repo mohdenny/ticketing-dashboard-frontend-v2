@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useMaintenance } from '@/hooks/useMaintenance';
+import { useTicketMaintenance } from '@/hooks/tickets';
 import {
   Edit3,
   Trash2,
@@ -34,7 +34,8 @@ interface MaintenanceTicket {
 }
 
 export default function MaintenanceList({ query }: { query: string }) {
-  const { maintenanceTickets, isLoading, deleteMaintenance } = useMaintenance();
+  const { maintenanceTickets, isLoading, deleteMaintenance } =
+    useTicketMaintenance();
 
   // State management
   const [filterStatus, setFilterStatus] = useState('all');
@@ -246,7 +247,7 @@ export default function MaintenanceList({ query }: { query: string }) {
 
                         {/* Title link */}
                         <Link
-                          href={`/operasional/tickets/maintenance/detail/${t.id}`}
+                          href={`/operational/tickets/maintenance/detail/${t.id}`}
                           className="font-semibold text-[#1C1B1F] text-base hover:text-[#6750A4] transition-colors line-clamp-1 block"
                         >
                           {t.title}
@@ -322,7 +323,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end items-center gap-2">
                         <Link
-                          href={`/operasional/tickets/maintenance/detail/${t.id}`}
+                          href={`/operational/tickets/maintenance/detail/${t.id}`}
                           className="p-2 text-[#49454F] bg-[#F2F2F2] hover:bg-[#E0E0E0] rounded-full transition-all border border-[#CAC4D0]/30"
                           title="Lihat Detail"
                         >
@@ -330,7 +331,7 @@ export default function MaintenanceList({ query }: { query: string }) {
                         </Link>
 
                         <Link
-                          href={`/operasional/tickets/maintenance/edit/${t.id}`}
+                          href={`/operational/tickets/maintenance/edit/${t.id}`}
                           className="p-2 text-[#6750A4] bg-[#F3EDF7] hover:bg-[#E8DEF8] rounded-full transition-all border border-[#E8DEF8]"
                           title="Edit"
                         >

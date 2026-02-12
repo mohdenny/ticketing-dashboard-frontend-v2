@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 import { selectUser } from '@/store/user/userSlice';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import {
   BriefcaseBusiness,
   Activity,
@@ -60,25 +60,25 @@ export default function Sidebar() {
     },
     {
       title: 'Operasional & Layanan',
-      shortLabel: 'Operasional',
+      shortLabel: 'operational',
       groupIcon: BriefcaseBusiness,
       items: [
         {
           name: 'Tiket Kendala',
-          href: '/operasional/tickets/trouble',
+          href: '/operational/tickets/trouble',
           icon: TicketX,
         },
         {
           name: 'Pemeliharaan',
-          href: '/operasional/tickets/maintenance',
+          href: '/operational/tickets/maintenance',
           icon: Wrench,
         },
         {
           name: 'Komplain Pemirsa',
-          href: '/operasional/tickets/complain',
+          href: '/operational/tickets/complain',
           icon: MessageSquareWarning,
         },
-        { name: 'Log Aktivitas', href: '/operasional/log', icon: ScrollText },
+        { name: 'Log Aktivitas', href: '/operational/log', icon: ScrollText },
       ],
     },
     {

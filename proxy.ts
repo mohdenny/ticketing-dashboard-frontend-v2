@@ -22,7 +22,7 @@ export function proxy(request: NextRequest) {
   // 1. DAFTAR HALAMAN YANG DIPROTEKSI (PROTECTED ROUTES)
   // Kamu tinggal tambah halaman di sini menggunakan ||
   const isProtectedRoute =
-    pathname === '/' || pathname.startsWith('/operasional');
+    pathname === '/' || pathname.startsWith('/operational');
 
   // 2. LOGIKA PROTEKSI ADMIN
   // Standar keamanan: Akses yang tidak sah ke area admin harus dilempar ke root atau 404
