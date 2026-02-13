@@ -3,13 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import MaintenanceForm from '@/components/modules/tickets/maintenance/MaintenanceForm';
-import { useTicketMaintenance } from '@/hooks/tickets';
+import { useMaintenance } from '@/hooks/tickets';
 import { MaintenanceFormValues } from '@/schemas/tickets/maintenance';
-import { CancelAction } from '@/components/layouts/CancelAction'; // Asumsi Anda punya komponen ini
+import { CancelAction } from '@/components/layouts/CancelAction';
 
 export default function CreateMaintenancePage() {
   const router = useRouter();
-  const { createMaintenance, isProcessing } = useTicketMaintenance();
+  const { createMaintenance, isProcessing } = useMaintenance();
 
   const handleCreateSubmit = async (data: MaintenanceFormValues) => {
     try {

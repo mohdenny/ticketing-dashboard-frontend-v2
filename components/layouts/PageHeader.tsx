@@ -1,22 +1,25 @@
 import Link from 'next/link';
-import { Plus } from 'lucide-react'; // Gunakan library icon seperti lucide
+import { LucideIcon } from 'lucide-react';
 
-interface PageTitleProps {
+interface PageHeaderProps {
   title: string;
   description: string;
   actionButton?: {
     link: string;
     label: string;
+    icon: LucideIcon;
   };
 }
 
-export default function PageTitle({
+export default function PageHeader({
   title,
   description,
   actionButton,
-}: PageTitleProps) {
+}: PageHeaderProps) {
+  const Icon = actionButton?.icon;
+
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-2">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 rounded-lg">
       <div>
         <h1 className="text-[32px] font-medium text-[#1C1B1F] tracking-tight leading-tight">
           {title}
@@ -26,12 +29,12 @@ export default function PageTitle({
         </p>
       </div>
 
-      {actionButton && (
+      {actionButton && Icon && (
         <Link
           href={actionButton.link}
           className="flex items-center justify-center gap-2 bg-[#6750A4] text-white px-6 py-3.5 rounded-full font-medium shadow-sm hover:shadow-md active:scale-95 transition-all w-fit"
         >
-          <Plus size={20} />
+          <Icon size={20} />
           <span>{actionButton.label}</span>
         </Link>
       )}

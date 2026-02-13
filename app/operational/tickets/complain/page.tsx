@@ -1,6 +1,6 @@
 'use client';
 
-import PageTitle from '@/components/layouts/PageTitle';
+import PageTitle from '@/components/layouts/PageHeader';
 
 export default function ComplainPage() {
   return (

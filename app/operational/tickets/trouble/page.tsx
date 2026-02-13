@@ -1,8 +1,10 @@
 'use client';
 
 import { use } from 'react';
+import { Plus } from 'lucide-react';
 import TicketTroubleList from '@/components/modules/tickets/trouble/TroubleList';
-import PageTitle from '@/components/layouts/PageTitle';
+import PageHeader from '@/components/layouts/PageHeader';
+import PageContainer from '@/components/layouts/PageContainer';
 
 export default function TicketsPage({
   searchParams,
@@ -13,22 +15,21 @@ export default function TicketsPage({
   const query = resolvedSearchParams.q || '';
 
   return (
-    <div className="min-h-screen bg-[#FDFCFF] p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <PageTitle
-          title="Manajemen Tiket Kendala"
-          description="Semua laporan dukungan operational dalam satu tempat."
-          actionButton={{
-            link: '/operational/tickets/trouble/create',
-            label: 'Buat Tiket',
-          }}
-        />
+    <PageContainer variant="primary">
+      <PageHeader
+        title="Manajemen Tiket Kendala"
+        description="Semua laporan dukungan operational dalam satu tempat."
+        actionButton={{
+          link: '/operational/tickets/trouble/create',
+          label: 'Buat Tiket',
+          icon: Plus,
+        }}
+      />
 
-        {/* Wrapper animasi in*/}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <TicketTroubleList query={query} />
-        </div>
+      {/* Wrapper animasi in*/}
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <TicketTroubleList query={query} />
       </div>
-    </div>
+    </PageContainer>
   );
 }

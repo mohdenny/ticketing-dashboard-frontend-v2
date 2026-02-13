@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 
-// Ini mencerminkan struktur data yang disimpan di database
+let maintenanceTickets: MaintenanceTicket[] = [];
+
 export type MaintenanceTicket = {
   id: string;
-  // Data Utama
   title: string;
   troubleSource: string;
   category: string;
   startTime: string;
   pic: string;
   siteId?: string;
-
-  // Data Teknis
   networkElement?: string;
   statusTx?: string;
   impactTx?: string;
@@ -20,16 +18,10 @@ export type MaintenanceTicket = {
   broadcastExplanation?: string;
   impactCustomer?: string;
   runHours?: string;
-
-  // Media
   images: string[];
-
-  // System Status
   status: 'Scheduled' | 'open' | 'process' | 'closed' | 'pending';
   createdAt: string;
   updatedAt: string;
-
-  // TIMELINE / RIWAYAT (Array of Logs)
   updates: TicketUpdateLog[];
 };
 
@@ -42,22 +34,12 @@ export type TicketUpdateLog = {
   images: string[];
 };
 
-// --- 2. IN-MEMORY DATABASE (MOCK DATA STORE) ---
-// Data ini akan reset setiap kali server Next.js restart (save file).
-// Dalam production, ganti array ini dengan Database (Prisma/MySQL/Mongo).
+export const dynamic = 'force-dynamic';
 
-let maintenanceTickets: MaintenanceTicket[] = [];
-
-// --- 3. API HANDLERS ---
-
-export const dynamic = 'force-dynamic'; // Mencegah caching statis
-
-// [GET] AMBIL DATA (LIST & DETAIL)
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
-  // A. DETAIL BY ID
   if (id) {
     const ticket = maintenanceTickets.find((t) => t.id === id);
     if (!ticket) {
@@ -76,7 +58,6 @@ export async function GET(request: Request) {
     return NextResponse.json(sortedTicket);
   }
 
-  // B. LIST ALL
   // Urutkan tiket berdasarkan created terbaru
   const sortedList = [...maintenanceTickets].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -84,7 +65,6 @@ export async function GET(request: Request) {
   return NextResponse.json(sortedList);
 }
 
-// [POST] BUAT TIKET BARU
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -155,8 +135,8 @@ export async function PUT(request: Request) {
     // Logic Update Utama
     const updatedTicket: MaintenanceTicket = {
       ...currentTicket,
-      ...mainData, // Update field teknis jika ada perubahan
-      status: newStatus || currentTicket.status, // Update status utama
+      ...mainData,
+      status: newStatus || currentTicket.status,
       updatedAt: now,
     };
 
@@ -185,7 +165,6 @@ export async function PUT(request: Request) {
   }
 }
 
-// HAPUS TIKET
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

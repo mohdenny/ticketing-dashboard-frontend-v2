@@ -51,7 +51,7 @@ export default function TroubleForm({
     watch, // Pengganti State lokal agar re-render saat data berubah
     trigger,
     formState: { errors },
-  } = useForm({
+  } = useForm<TroubleFormValues>({
     resolver: zodResolver(troubleSchema),
     defaultValues: {
       title: initialData?.title || '',
@@ -77,15 +77,13 @@ export default function TroubleForm({
     },
   });
 
-  // WATCHERS: Menggantikan useState untuk render UI real-time
+  // Watchers untuk render UI real-time seperti useState
   const watchedReporters = watch('reporters') || [];
   const watchedUpdateReporters = watch('updateReporters') || [];
   const watchedMainImages = watch('images') || [];
   const watchedUpdateImages = watch('updateImages') || [];
 
-  // --- HANDLERS (Menggunakan setValue RHF) ---
-
-  // 1. Logic Pelapor Awal
+  // Logic Pelapor Awal
   const handleAddReporter = (value: string) => {
     if (value === 'external') {
       setIsExternalInput(true);
@@ -116,7 +114,7 @@ export default function TroubleForm({
     setValue('reporters', updated, { shouldValidate: true });
   };
 
-  // 2. Logic Pelapor Update
+  // Logic Pelapor Update
   const handleAddUpdateReporter = (value: string) => {
     if (value === 'external') {
       setIsUpdateExternalInput(true);
@@ -147,7 +145,7 @@ export default function TroubleForm({
     setValue('updateReporters', updated, { shouldValidate: true });
   };
 
-  // 3. Logic Images
+  // Logic Images
   const handleFileSelect = (
     e: ChangeEvent<HTMLInputElement>,
     target: 'main' | 'update',
@@ -201,7 +199,6 @@ export default function TroubleForm({
     'text-sm font-medium text-[#49454F] mb-2 block tracking-wide';
   const errorClass = 'text-xs text-[#B3261E] mt-1 ml-1 font-medium';
 
-  // --- SUB COMPONENTS (Helpers) ---
   const AttachmentSection = ({ images, target, readOnly = false }: any) => (
     <div className="space-y-2">
       <label className={labelClass}>
@@ -601,7 +598,7 @@ export default function TroubleForm({
             )}
           </div>
 
-          {/* Reporters (Initial) */}
+          {/* Reporters */}
           <div>
             <label className={labelClass}>
               Pelapor Awal{' '}
@@ -640,16 +637,16 @@ export default function TroubleForm({
             />
           )}
 
-          {/* EDIT MODE: PINDAHKAN TECHNICAL FIELDS KE KIRI */}
+          {/* Jika edit mode, technical field ke kiri */}
           {initialData && <TechnicalFields readOnly={true} />}
         </div>
 
-        {/* KOLOM KANAN */}
+        {/* Kolom kanan*/}
         <div className="space-y-6">
-          {/* CREATE MODE: TECHNICAL FIELDS DI KANAN */}
+          {/* Create mode technical field di kanan*/}
           {!initialData && <TechnicalFields readOnly={false} />}
 
-          {/* CREATE MODE: LAMPIRAN & TOMBOL DI KANAN */}
+          {/* Create mode, lampiran dan tombol di kanan */}
           {!initialData && (
             <>
               <AttachmentSection images={watchedMainImages} target="main" />
@@ -659,7 +656,7 @@ export default function TroubleForm({
             </>
           )}
 
-          {/* EDIT MODE: FORM UPDATE */}
+          {/* Edit mode, form update */}
           {initialData && (
             <div className="bg-[#F3EDF7] p-6 rounded-[24px] space-y-6 animate-in slide-in-from-right-2 fade-in shadow-none border border-transparent">
               <div className="flex items-center gap-3 text-[#6750A4] pb-2 border-b border-[#E7E0EC]">

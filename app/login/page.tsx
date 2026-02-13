@@ -33,9 +33,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: AuthFormValues) => {
     const toastId = toast.loading('Sedang memverifikasi...');
-
-    // Panggil wrapper login dari hook useAuth
-    // Wrapper ini sudah menangani try-catch internal dan mengembalikan object { success, message }
     const result = await login(data.email, data.password);
 
     if (result && !result.success) {
@@ -48,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    // Untuk pastiin kontainer bisa di-scroll di mobile (min-h-full)
+    // Kontainer bisa di-scroll di mobile (min-h-full)
     <div className="min-h-full w-full bg-[#F3EDF7] flex flex-col items-center justify-center p-4 md:p-8">
       {/* Card Wrapper */}
       <div className="w-full max-w-[400px] bg-white rounded-[28px] p-6 md:p-10 border border-[#E6E0E9] shadow-sm my-auto">
@@ -122,7 +119,7 @@ export default function LoginPage() {
             <div className="pt-2">
               <Button
                 type="submit"
-                // Gunakan isLoading dari React Query untuk state button
+                // isLoading dari React Query untuk state button
                 disabled={isLoading}
                 className="w-full bg-[#6750A4] text-white h-14 rounded-full hover:bg-[#4F378B] shadow-sm hover:shadow-md transition-all active:scale-[0.97] font-bold text-base flex items-center justify-center gap-3"
               >

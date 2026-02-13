@@ -13,7 +13,7 @@ export const POST = async (request: Request) => {
 
     const { email, password } = result.data;
 
-    // Cari di MOCK_USERS yang sudah centralized
+    // Cari di MOCK_USERS
     const foundUser = MOCK_USERS.find(
       (u) => u.email === email && u.password === password,
     );

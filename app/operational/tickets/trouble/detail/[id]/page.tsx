@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTroubleDetail, useTrouble } from '@/hooks/tickets/useTrouble'; // Pastikan path hook sesuai
-import { Trouble, TroubleHistory } from '@/types/tickets/trouble'; // Import tipe baru
+import { useTroubleDetail, useTrouble } from '@/hooks/tickets/useTrouble';
+import { Trouble, TroubleHistory } from '@/types/tickets/trouble';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { CancelAction } from '@/components/layouts/CancelAction';
@@ -33,7 +33,6 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const ticketId = params.id as string;
 
-  // Type assertion ke Trouble agar intellisense jalan (opsional jika hook sudah typed)
   const { data: ticketData, isLoading, error } = useTroubleDetail(ticketId);
   const ticket = ticketData as Trouble | undefined;
 
@@ -47,11 +46,10 @@ export default function TicketDetailPage() {
     return ticket.images || [];
   }, [ticket]);
 
-  // Logic activity feed (Disinkronkan dengan Structure TroubleHistory)
+  // Logic activity feed
   const activities = useMemo(() => {
     if (!ticket) return [];
 
-    // 1. Event Pembuatan (Initial)
     const initialEvent = {
       id: 'created',
       ticketId: ticket.id,
@@ -59,24 +57,21 @@ export default function TicketDetailPage() {
       title: 'Tiket Dibuat',
       content: 'Tiket berhasil dibuat dan masuk ke sistem.',
       date: ticket.createdAt,
-      // Gunakan pelapor awal sebagai user, atau fallback ke 'System'
       user: ticket.reporters?.join(', ') || 'System',
       images: mainImages, // Foto Utama ditampilkan di event awal
       status: 'open' as const,
     };
 
-    // 2. Event Updates (History)
     const updateEvents = (ticket.updates || []).map((u: TroubleHistory) => {
       return {
         id: u.id,
         ticketId: ticket.id,
         type: 'update',
         title: 'Update Progress',
-        content: u.description, // Field baru: description
-        date: u.date, // Field baru: date (ISO)
-        // Field baru: reporters (array), kita join jadi string untuk UI
+        content: u.description,
+        date: u.date,
         user: u.reporters ? u.reporters.join(', ') : 'Unknown',
-        images: u.images || [], // Field baru: images (array)
+        images: u.images || [],
         status: u.status,
       };
     });
@@ -182,7 +177,7 @@ export default function TicketDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* Link Edit diarahkan ke page edit baru */}
+          {/* Link Edit */}
           <Link
             href={`/operational/tickets/trouble/edit/${ticket.id}`}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#F3EDF7] text-[#1D1B20] px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#E8DEF8] transition-colors"
@@ -202,7 +197,6 @@ export default function TicketDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Kolom kiri deskripsi dan timeline */}
         <div className="lg:col-span-8 space-y-10">
           {/* Detail Masalah */}
           <div className="relative pl-4 md:pl-0">
@@ -215,7 +209,7 @@ export default function TicketDetailPage() {
                 {ticket.description || 'Tidak ada deskripsi tambahan.'}
               </p>
 
-              {/* Menampilkan mainImages (Foto Awal) */}
+              {/* Yampilkan mainImages foto awal tiket */}
               {mainImages.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-gray-100">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -331,7 +325,7 @@ export default function TicketDetailPage() {
 
                       <p>{activity.content}</p>
 
-                      {/* Tampilkan foto UPDATE khusus event update */}
+                      {/* Tampilkan foto update, event update */}
                       {activity.images &&
                         activity.images.length > 0 &&
                         !isInitial && (
@@ -364,7 +358,7 @@ export default function TicketDetailPage() {
           </div>
         </div>
 
-        {/* KOLOM KANAN (SIDEBAR INFO) */}
+        {/* Kolom kanan, informasi tiket */}
         <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
           <div className="bg-white border border-[#CAC4D0] rounded-[24px] p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">

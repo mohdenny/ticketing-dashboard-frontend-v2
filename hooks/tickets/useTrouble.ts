@@ -54,7 +54,6 @@ export const useTrouble = () => {
   });
 
   // PUT (Update)
-  // Payload disesuaikan: ID tiket + Data Form (Zod Schema)
   const { mutateAsync: updateTicket, isPending: isUpdating } = useMutation({
     mutationFn: async ({
       id,
@@ -112,7 +111,7 @@ export const useTroubleDetail = (id: number | string | null) => {
   return useQuery<Trouble>({
     queryKey: ['ticket-trouble', String(id)],
     queryFn: async () => {
-      if (!id) return null; // Guard clause
+      if (!id) return null;
       const res = await fetch(`/api/tickets/trouble?id=${id}`);
       if (!res.ok) throw new Error('Tiket tidak ditemukan');
       return res.json();

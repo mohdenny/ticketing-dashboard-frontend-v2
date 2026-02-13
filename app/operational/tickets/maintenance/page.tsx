@@ -1,7 +1,7 @@
 'use client';
 
 import { use } from 'react';
-import PageTitle from '@/components/layouts/PageTitle';
+import PageTitle from '@/components/layouts/PageHeader';
 import MaintenanceList from '@/components/modules/tickets/maintenance/MaintenanceList';
 
 export default function MaintenancePage({
@@ -22,6 +22,7 @@ export default function MaintenancePage({
           actionButton={{
             link: '/operational/tickets/maintenance/create',
             label: 'Jadwal Baru',
+            icon:
           }}
         />
 

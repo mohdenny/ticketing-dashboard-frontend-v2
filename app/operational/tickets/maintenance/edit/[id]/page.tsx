@@ -3,7 +3,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import PageTitle from '@/components/layouts/PageTitle';
+import PageTitle from '@/components/layouts/PageHeader';
 import TicketMaintenanceForm from '@/components/modules/tickets/maintenance/MaintenanceForm';
 import { useMaintenance, useMaintenanceDetail } from '@/hooks/tickets';
 import { Loader2 } from 'lucide-react';

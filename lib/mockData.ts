@@ -3,7 +3,7 @@ export const MOCK_USERS = [
     id: 1,
     email: 'admin@mail.com',
     name: 'Admin Utama',
-    password: '123456', // Di real app, ini harus di-hash
+    password: '123456',
     role: 'admin',
   },
   {

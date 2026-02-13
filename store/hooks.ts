@@ -1,4 +1,3 @@
-// src/store/hooks.ts
 'use client';
 
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';

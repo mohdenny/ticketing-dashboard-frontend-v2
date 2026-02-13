@@ -27,7 +27,7 @@ import {
   TableProperties,
 } from 'lucide-react';
 
-// --- DUMMY DATA ---
+// Dummy data
 const timeSeriesData = [
   {
     time: '00:00',
@@ -122,8 +122,7 @@ const timeSlots = [
   '22:00',
 ];
 
-// --- COMPONENTS ---
-
+// Component
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -374,8 +373,7 @@ const InputContentTable = () => (
   </div>
 );
 
-// --- MAIN PAGE ---
-
+// Main page
 export default function MonitoringTxDigitalPage({
   searchParams,
 }: {
@@ -387,7 +385,7 @@ export default function MonitoringTxDigitalPage({
   return (
     <div className="min-h-screen bg-[#FDFCFF] p-4 md:p-6 lg:p-8 font-sans text-[#1D1B20]">
       <div className="max-w-[1440px] mx-auto space-y-6">
-        {/* TOP BAR: Title & Actions */}
+        {/* Top bar, Title & Actions */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-2">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm font-medium text-[#6750A4] bg-[#E8DEF8] w-fit px-3 py-1 rounded-full mb-2">
@@ -404,7 +402,7 @@ export default function MonitoringTxDigitalPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            {/* View Switcher (Segmented Button M3 Style) */}
+            {/* View Switcher/ Segemented button */}
             <div className="bg-[#E7E0EC] p-1 rounded-full flex items-center w-full sm:w-auto">
               <button
                 onClick={() => setViewMode('charts')}
@@ -440,7 +438,7 @@ export default function MonitoringTxDigitalPage({
           </div>
         </div>
 
-        {/* CONTROLS BAR: Filters */}
+        {/* Controls bar, filters */}
         <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[20px] p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm sticky top-2 z-40 backdrop-blur-md bg-[#FEF7FF]/90">
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <div className="flex items-center gap-2 text-[#49454F] text-sm font-medium mr-2">
@@ -488,11 +486,11 @@ export default function MonitoringTxDigitalPage({
           </button>
         </div>
 
-        {/* CONTENT AREA */}
+        {/* Content area */}
         <div className="min-h-[600px] animate-in fade-in zoom-in-95 duration-500">
           {viewMode === 'charts' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
-              {/* Row 1: Key Metrics */}
+              {/* Baris 1, Key Metrics */}
               <div className="md:col-span-2 xl:col-span-2">
                 <ChartCard title="Main Output Power">
                   <ReusableAreaChart
@@ -513,7 +511,7 @@ export default function MonitoringTxDigitalPage({
                 />
               </ChartCard>
 
-              {/* Row 2: Exciters */}
+              {/* Baris 2, Exciters */}
               <ChartCard title="Exciter A Power">
                 <ReusableAreaChart
                   data={timeSeriesData}
@@ -541,7 +539,7 @@ export default function MonitoringTxDigitalPage({
                 />
               </ChartCard>
 
-              {/* Row 3: HPA Forward */}
+              {/* Baris 3, HPA Forward */}
               <div className="md:col-span-2 xl:col-span-1">
                 <ChartCard title="Fwd Power HPA 1-3">
                   <ReusableMultiBarChart
@@ -565,7 +563,7 @@ export default function MonitoringTxDigitalPage({
                 </ChartCard>
               </div>
 
-              {/* Row 4: Pressure & Reflect */}
+              {/* Baris 4, Pressure & Reflect */}
               <ChartCard title="Liquid Pressure">
                 <ReusableBarChart
                   data={timeSeriesData}

@@ -2,7 +2,7 @@
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import PageTitle from '@/components/layouts/PageTitle';
+import PageTitle from '@/components/layouts/PageHeader';
 import { useMaintenanceDetail } from '@/hooks/tickets';
 import {
   Loader2,
@@ -96,9 +96,9 @@ export default function MaintenanceDetailPage({
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* KOLOM KIRI: INFO UTAMA */}
+          {/* Kolom kiri, bagian utama */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Card: Status & Title */}
+            {/* Card, Status & Title */}
             <div className="bg-[#FEF7FF] rounded-[24px] p-6 border border-[#CAC4D0] shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-2 h-full bg-[#6750A4]"></div>
 
@@ -135,7 +135,7 @@ export default function MaintenanceDetailPage({
               </div>
             </div>
 
-            {/* Card: Detail Teknis */}
+            {/* Card, Detail Teknis */}
             <div className="bg-[#FEF7FF] rounded-[24px] p-6 border border-[#CAC4D0] shadow-sm">
               <h3 className="text-lg font-bold text-[#1D1B20] mb-4 flex items-center gap-2">
                 <Activity size={20} className="text-[#6750A4]" /> Detail Teknis
@@ -220,7 +220,7 @@ export default function MaintenanceDetailPage({
               </div>
             </div>
 
-            {/* Card: Dokumentasi / Images */}
+            {/* Card, Dokumentasi / Images */}
             {ticket.images && ticket.images.length > 0 && (
               <div className="bg-[#FEF7FF] rounded-[24px] p-6 border border-[#CAC4D0] shadow-sm">
                 <h3 className="text-lg font-bold text-[#1D1B20] mb-4 flex items-center gap-2">

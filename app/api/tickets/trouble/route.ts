@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server';
 import { Trouble, TroubleHistory } from '@/types/tickets/trouble';
 import { troubleSchema } from '@/schemas/tickets/trouble';
 
-// --- MOCK DATABASE ---
 let tickets: Trouble[] = [];
-// ---------------------
 
 export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url);
@@ -31,7 +29,7 @@ export const POST = async (request: Request) => {
   try {
     const body = await request.json();
 
-    // 1. Validasi Zod
+    // Validasi Zod
     const validation = troubleSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
@@ -43,13 +41,13 @@ export const POST = async (request: Request) => {
     const data = validation.data;
     const now = new Date().toISOString();
 
-    // 2. Construct Data Baru
+    // Construct Data Baru
     const newTicket: Trouble = {
       id: Date.now(), // Simple ID generation
       title: data.title,
       siteId: data.siteId,
       description: data.description || '',
-      status: 'open', // Force open saat create
+      status: 'open', // status open saat create
       priority: data.priority,
       startTime: data.startTime,
       runHours: data.runHours,
@@ -86,7 +84,7 @@ export const PUT = async (request: Request) => {
     if (!id)
       return NextResponse.json({ message: 'ID diperlukan' }, { status: 400 });
 
-    // 1. Validasi Zod
+    // Validasi Zod
     const validation = troubleSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
@@ -105,7 +103,7 @@ export const PUT = async (request: Request) => {
       const currentTicket = tickets[index];
       const now = new Date().toISOString();
 
-      // 2. Logic History Update
+      // Logic History Update
       // Jika user mengirimkan updateDescription, kita anggap ini progress update
       const newUpdates = [...currentTicket.updates];
 
@@ -121,16 +119,14 @@ export const PUT = async (request: Request) => {
         newUpdates.push(historyItem);
       }
 
-      // 3. Update Data Utama
-      // Kita hanya mengupdate field yang boleh berubah (Dynamic fields)
+      // Update Data Utama
+      // Update field yang boleh berubah (Dynamic fields)
       tickets[index] = {
         ...currentTicket,
         status: data.status,
         runHours: data.runHours || currentTicket.runHours,
         statusTx: data.statusTx || currentTicket.statusTx,
         duration: data.duration || currentTicket.duration,
-        // Images utama biasanya jarang diubah saat update progress,
-        // tapi jika fitur edit mengizinkan, gunakan: data.images || currentTicket.images
         updatedAt: now,
         updates: newUpdates,
       };

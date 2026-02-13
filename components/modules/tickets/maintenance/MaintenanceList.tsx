@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useTicketMaintenance } from '@/hooks/tickets';
+import { useMaintenance } from '@/hooks/tickets';
 import {
   Edit3,
   Trash2,
@@ -34,8 +34,7 @@ interface MaintenanceTicket {
 }
 
 export default function MaintenanceList({ query }: { query: string }) {
-  const { maintenanceTickets, isLoading, deleteMaintenance } =
-    useTicketMaintenance();
+  const { maintenanceTickets, isLoading, deleteMaintenance } = useMaintenance();
 
   // State management
   const [filterStatus, setFilterStatus] = useState('all');
