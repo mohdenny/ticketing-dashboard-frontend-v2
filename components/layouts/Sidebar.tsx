@@ -78,7 +78,6 @@ export default function Sidebar() {
           href: '/operational/tickets/complain',
           icon: MessageSquareWarning,
         },
-        { name: 'Log Aktivitas', href: '/operational/log', icon: ScrollText },
       ],
     },
     {

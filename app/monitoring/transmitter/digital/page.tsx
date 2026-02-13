@@ -16,15 +16,18 @@ import {
 import {
   History,
   Edit,
-  Eye,
   MoreVertical,
   Calendar,
   Save,
-  ArrowLeft,
   Tv,
+  LayoutDashboard,
+  Filter,
+  RefreshCcw,
+  CheckCircle2,
+  TableProperties,
 } from 'lucide-react';
 
-// Dummy data
+// --- DUMMY DATA ---
 const timeSeriesData = [
   {
     time: '00:00',
@@ -94,7 +97,6 @@ const timeSeriesData = [
   },
 ];
 
-// Dummy data input table
 const inputChannels = [
   'BBS TV',
   'BN CHANNEL',
@@ -120,41 +122,65 @@ const timeSlots = [
   '22:00',
 ];
 
-// Reusable chart
-const ChartCard = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] p-6 shadow-sm flex flex-col h-[350px]">
-    <div className="flex justify-between items-center mb-4 border-b border-[#E7E0EC] pb-2">
-      <h3 className="text-base font-bold text-[#6750A4]">{title}</h3>
-      <button className="text-[#49454F] hover:bg-[#F3EDF7] p-1 rounded-full transition-colors">
-        <MoreVertical size={18} />
-      </button>
-    </div>
-    <div className="flex-1 w-full min-h-0">{children}</div>
-  </div>
-);
+// --- COMPONENTS ---
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#F3EDF7] border border-[#CAC4D0] p-3 rounded-xl shadow-md text-xs">
-        <p className="font-bold text-[#1D1B20] mb-1">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ color: entry.color }} className="font-medium">
-            {entry.name}: {entry.value}
-          </p>
-        ))}
+      <div className="bg-[#F3EDF7]/95 backdrop-blur-sm border border-[#CAC4D0] p-3 rounded-[12px] shadow-lg text-xs z-50">
+        <p className="font-bold text-[#1D1B20] mb-2 border-b border-[#CAC4D0]/50 pb-1">
+          {label}
+        </p>
+        <div className="space-y-1">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              ></span>
+              <span className="text-[#49454F] font-medium min-w-[60px]">
+                {entry.name}:
+              </span>
+              <span className="font-bold" style={{ color: entry.color }}>
+                {entry.value}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
   return null;
 };
 
+// Reusable Chart Wrapper
+const ChartCard = ({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) => (
+  <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] p-1 shadow-sm flex flex-col h-[350px] group hover:border-[#6750A4]/30 transition-colors duration-300">
+    <div className="flex justify-between items-center px-5 pt-5 pb-2">
+      <div className="flex items-center gap-2">
+        {/* Decorative bar */}
+        <div className="h-4 w-1 bg-[#6750A4] rounded-full"></div>
+        <h3 className="text-sm font-bold text-[#1D1B20] tracking-wide">
+          {title}
+        </h3>
+      </div>
+      <button className="text-[#49454F] hover:bg-[#F3EDF7] p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100">
+        <MoreVertical size={18} />
+      </button>
+    </div>
+    <div className="flex-1 w-full min-h-0 px-2 pb-2">{children}</div>
+  </div>
+);
+
+// Charts Logic
 const ReusableAreaChart = ({ data, dataKey, color, unit, yDomain }: any) => (
   <ResponsiveContainer width="100%" height="100%">
     <AreaChart
@@ -163,7 +189,7 @@ const ReusableAreaChart = ({ data, dataKey, color, unit, yDomain }: any) => (
     >
       <defs>
         <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+          <stop offset="5%" stopColor={color} stopOpacity={0.15} />
           <stop offset="95%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
@@ -187,10 +213,10 @@ const ReusableAreaChart = ({ data, dataKey, color, unit, yDomain }: any) => (
         type="monotone"
         dataKey={dataKey}
         stroke={color}
-        strokeWidth={3}
+        strokeWidth={2.5}
         fillOpacity={1}
         fill={`url(#color${dataKey})`}
-        dot={{ r: 4, fill: color, strokeWidth: 2, stroke: '#fff' }}
+        dot={{ r: 0, active: { r: 5, strokeWidth: 0 } }}
       />
     </AreaChart>
   </ResponsiveContainer>
@@ -215,9 +241,9 @@ const ReusableBarChart = ({ data, dataKey, color, unit }: any) => (
       />
       <Tooltip
         content={<CustomTooltip />}
-        cursor={{ fill: '#E8DEF8', opacity: 0.4 }}
+        cursor={{ fill: '#E8DEF8', opacity: 0.3, radius: 4 }}
       />
-      <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} barSize={40} />
+      <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} barSize={32} />
     </BarChart>
   </ResponsiveContainer>
 );
@@ -241,11 +267,15 @@ const ReusableMultiBarChart = ({ data, keys, colors, unit, stackId }: any) => (
       />
       <Tooltip
         content={<CustomTooltip />}
-        cursor={{ fill: '#E8DEF8', opacity: 0.4 }}
+        cursor={{ fill: '#E8DEF8', opacity: 0.3, radius: 4 }}
       />
       <Legend
         iconType="circle"
-        wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }}
+        wrapperStyle={{
+          fontSize: '11px',
+          paddingTop: '12px',
+          color: '#49454F',
+        }}
       />
       {keys.map((key: string, index: number) => (
         <Bar
@@ -253,35 +283,41 @@ const ReusableMultiBarChart = ({ data, keys, colors, unit, stackId }: any) => (
           dataKey={key}
           fill={colors[index]}
           stackId={stackId}
-          radius={[4, 4, 0, 0]}
-          barSize={20}
+          radius={index === keys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+          barSize={24}
         />
       ))}
     </BarChart>
   </ResponsiveContainer>
 );
 
-// Input table
+// Input Table Component
 const InputContentTable = () => (
-  <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] p-6 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-    <div className="flex justify-between items-center mb-6 border-b border-[#E7E0EC] pb-4">
-      <h3 className="text-lg font-bold text-[#1D1B20]">Input Content Log</h3>
-      <button className="flex items-center gap-2 bg-[#6750A4] text-white px-6 py-2.5 rounded-[12px] text-sm font-medium hover:bg-[#523E85] transition-all shadow-sm active:scale-95">
-        <Save size={18} /> Simpan Data
+  <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[24px] overflow-hidden shadow-sm flex flex-col h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-[#E7E0EC]">
+      <div>
+        <h3 className="text-lg font-bold text-[#1D1B20]">Input Log Harian</h3>
+        <p className="text-sm text-[#49454F]">
+          Pantau kualitas sinyal input per jam
+        </p>
+      </div>
+      <button className="flex items-center gap-2 bg-[#6750A4] text-white px-5 py-2.5 rounded-[12px] text-sm font-medium hover:bg-[#523E85] transition-all shadow-sm active:scale-95">
+        <Save size={18} />
+        <span>Simpan Perubahan</span>
       </button>
     </div>
 
-    <div className="overflow-x-auto rounded-[16px] border border-[#E7E0EC]">
-      <table className="w-full text-sm text-center">
-        <thead className="bg-[#F3EDF7] text-[#49454F]">
+    <div className="overflow-x-auto custom-scrollbar flex-1">
+      <table className="w-full text-sm text-center border-collapse">
+        <thead className="bg-[#F3EDF7] text-[#49454F] sticky top-0 z-20 shadow-sm">
           <tr>
-            <th className="px-4 py-3 font-bold text-left min-w-[180px] border-b border-r border-[#E7E0EC] sticky left-0 bg-[#F3EDF7] z-10">
-              Video & Audio
+            <th className="px-4 py-4 font-bold text-left min-w-[200px] border-b border-r border-[#E7E0EC] sticky left-0 bg-[#F3EDF7] z-30">
+              Channel Name
             </th>
             {timeSlots.map((time) => (
               <th
                 key={time}
-                className="px-3 py-3 font-bold border-b border-r border-[#E7E0EC] min-w-[80px]"
+                className="px-3 py-4 font-semibold border-b border-r border-[#E7E0EC] min-w-[90px] whitespace-nowrap"
               >
                 {time}
               </th>
@@ -292,28 +328,41 @@ const InputContentTable = () => (
           {inputChannels.map((channel, idx) => (
             <tr
               key={idx}
-              className="group hover:bg-[#F3EDF7]/50 transition-colors"
+              className="group hover:bg-[#F3EDF7]/30 transition-colors"
             >
-              <td className="px-4 py-3 text-left font-medium text-[#1D1B20] border-r border-[#E7E0EC] sticky left-0 bg-[#FEF7FF] group-hover:bg-[#F3EDF7]/50 z-10 flex items-center gap-2">
-                <Tv size={16} className="text-[#6750A4]" /> {channel}
+              <td className="px-4 py-3 text-left font-medium text-[#1D1B20] border-r border-[#E7E0EC] sticky left-0 bg-[#FEF7FF] group-hover:bg-[#F3EDF7] z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#E8DEF8] rounded-lg text-[#6750A4]">
+                    <Tv size={16} />
+                  </div>
+                  {channel}
+                </div>
               </td>
               {timeSlots.map((time, tIdx) => {
-                // Dummy logic for display: 02:00, 08:00, 10:00 = "Normal", others "-"
-                const val =
-                  time === '02:00' || time === '08:00' || time === '10:00'
-                    ? 'Normal'
-                    : '-';
+                const isNormal =
+                  time === '02:00' || time === '08:00' || time === '10:00';
                 return (
                   <td
                     key={tIdx}
-                    className="px-1 py-1 border-r border-[#E7E0EC]"
+                    className="px-2 py-2 border-r border-[#E7E0EC]"
                   >
-                    <div
-                      className={`py-2 px-1 rounded-md text-xs font-medium cursor-pointer transition-all
-                      ${val === 'Normal' ? 'bg-[#E8DEF8] text-[#1D192B] border border-[#E8DEF8] hover:border-[#6750A4]' : 'text-[#79747E] hover:bg-gray-100'}`}
+                    <button
+                      className={`w-full py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border
+                        ${
+                          isNormal
+                            ? 'bg-[#E8DEF8]/50 text-[#1D192B] border-[#CAC4D0] hover:bg-[#E8DEF8] hover:border-[#6750A4]'
+                            : 'bg-transparent text-[#79747E] border-transparent hover:bg-gray-100 hover:border-[#E7E0EC]'
+                        }`}
                     >
-                      {val}
-                    </div>
+                      {isNormal ? (
+                        <span className="flex items-center justify-center gap-1">
+                          <CheckCircle2 size={12} className="text-[#6750A4]" />{' '}
+                          Normal
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </button>
                   </td>
                 );
               })}
@@ -325,164 +374,211 @@ const InputContentTable = () => (
   </div>
 );
 
-// Main page
+// --- MAIN PAGE ---
+
 export default function MonitoringTxDigitalPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const resolvedSearchParams = use(searchParams);
-  const query = resolvedSearchParams.q || '';
-
-  //  Controls View Mode
   const [viewMode, setViewMode] = useState<'charts' | 'input'>('charts');
 
   return (
-    <div className="min-h-screen bg-[#FDFCFF] p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* HEADER */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-[#FEF7FF] p-4 rounded-[24px] border border-[#CAC4D0] shadow-sm">
-          {/* Sebelah kiri Title dan Filter */}
-          <div className="flex flex-col gap-2">
-            <h1 className="text-xl font-normal text-[#1D1B20]">
-              Grafik Metering NEC 10,9KW (Digital){' '}
-              <span className="font-bold text-[#6750A4]">Site Surabaya</span>
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              <div className="relative">
-                <select className="pl-3 pr-8 py-2.5 bg-white border border-[#79747E] rounded-[12px] text-sm text-[#49454F] outline-none focus:border-[#6750A4]">
-                  <option>Today</option>
-                  <option>Yesterday</option>
-                </select>
-              </div>
-              <div className="relative flex items-center">
-                <input
-                  type="date"
-                  className="pl-3 pr-3 py-2.5 bg-white border border-[#79747E] rounded-[12px] text-sm text-[#49454F] outline-none focus:border-[#6750A4]"
-                  defaultValue="2026-02-11"
-                />
-              </div>
-              {/* Tombol Check tampil grafik */}
-              <button
-                onClick={() => setViewMode('charts')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-[12px] text-sm font-medium transition-all shadow-sm active:scale-95
-                  ${
-                    viewMode === 'charts'
-                      ? 'bg-[#6750A4] text-white hover:bg-[#523E85]'
-                      : 'bg-[#E8DEF8] text-[#1D1B20] hover:bg-[#E2D3F5]'
-                  }`}
-              >
-                <Eye size={18} /> Check
-              </button>
+    <div className="min-h-screen bg-[#FDFCFF] p-4 md:p-6 lg:p-8 font-sans text-[#1D1B20]">
+      <div className="max-w-[1440px] mx-auto space-y-6">
+        {/* TOP BAR: Title & Actions */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-2">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sm font-medium text-[#6750A4] bg-[#E8DEF8] w-fit px-3 py-1 rounded-full mb-2">
+              <LayoutDashboard size={14} />
+              <span>Monitoring Digital</span>
             </div>
+            <h1 className="text-3xl md:text-4xl font-normal tracking-tight text-[#1D1B20]">
+              NEC 10,9KW{' '}
+              <span className="font-bold text-[#6750A4]">Surabaya</span>
+            </h1>
+            <p className="text-[#49454F] text-sm md:text-base">
+              Real-time status transmisi dan input content log.
+            </p>
           </div>
 
-          {/* Sebelah kanan Action Buttons */}
-          <div className="flex items-center gap-3 self-end lg:self-center">
-            {/* Tombol Input Content tampilan ke Table) */}
-            <button
-              onClick={() => setViewMode('input')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-[12px] text-sm font-medium transition-all shadow-sm active:scale-95
-                ${
-                  viewMode === 'input'
-                    ? 'bg-[#4285F4] text-white ring-2 ring-offset-2 ring-[#4285F4]'
-                    : 'bg-[#4285F4] text-white hover:bg-[#1a73e8]'
-                }`}
-            >
-              <Edit size={18} /> Input Content
-            </button>
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* View Switcher (Segmented Button M3 Style) */}
+            <div className="bg-[#E7E0EC] p-1 rounded-full flex items-center w-full sm:w-auto">
+              <button
+                onClick={() => setViewMode('charts')}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300
+                    ${
+                      viewMode === 'charts'
+                        ? 'bg-[#6750A4] text-white shadow-md'
+                        : 'text-[#49454F] hover:bg-[#1D1B20]/5'
+                    }`}
+              >
+                <LayoutDashboard size={16} /> Monitoring
+              </button>
+              <button
+                onClick={() => setViewMode('input')}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300
+                    ${
+                      viewMode === 'input'
+                        ? 'bg-[#6750A4] text-white shadow-md'
+                        : 'text-[#49454F] hover:bg-[#1D1B20]/5'
+                    }`}
+              >
+                <TableProperties size={16} /> Input Log
+              </button>
+            </div>
 
-            <button className="flex items-center gap-2 bg-[#00C853] text-white px-5 py-2.5 rounded-[12px] text-sm font-medium hover:bg-[#009624] transition-all shadow-sm active:scale-95">
-              <History size={18} /> History
+            {/* History Button */}
+            <button
+              className="p-3 rounded-full border border-[#79747E] text-[#49454F] hover:bg-[#F3EDF7] hover:text-[#1D1B20] hover:border-[#1D1B20] transition-colors"
+              title="History Log"
+            >
+              <History size={20} />
             </button>
           </div>
         </div>
 
-        {/* Conditional rendering berdasarkan viewMode */}
-        <div className="min-h-[500px]">
+        {/* CONTROLS BAR: Filters */}
+        <div className="bg-[#FEF7FF] border border-[#CAC4D0] rounded-[20px] p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm sticky top-2 z-40 backdrop-blur-md bg-[#FEF7FF]/90">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2 text-[#49454F] text-sm font-medium mr-2">
+              <Filter size={16} /> Filter:
+            </div>
+            <div className="relative">
+              <select className="appearance-none pl-4 pr-10 py-2.5 bg-[#F3EDF7] hover:bg-[#E8DEF8] rounded-[12px] text-sm font-medium text-[#1D1B20] border-none outline-none focus:ring-2 focus:ring-[#6750A4] cursor-pointer transition-colors">
+                <option>Hari Ini</option>
+                <option>Kemarin</option>
+                <option>Minggu Ini</option>
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#49454F]">
+                <svg
+                  width="10"
+                  height="6"
+                  viewBox="0 0 10 6"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M1 1L5 5L9 1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="relative group">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6750A4]">
+                <Calendar size={16} />
+              </div>
+              <input
+                type="date"
+                defaultValue="2026-02-11"
+                className="pl-10 pr-4 py-2.5 bg-[#F3EDF7] hover:bg-[#E8DEF8] rounded-[12px] text-sm font-medium text-[#1D1B20] outline-none focus:ring-2 focus:ring-[#6750A4] transition-colors"
+              />
+            </div>
+          </div>
+
+          <button className="w-full sm:w-auto flex items-center justify-center gap-2 text-[#6750A4] hover:bg-[#E8DEF8] px-4 py-2.5 rounded-[12px] text-sm font-bold transition-colors">
+            <RefreshCcw size={16} /> Refresh Data
+          </button>
+        </div>
+
+        {/* CONTENT AREA */}
+        <div className="min-h-[600px] animate-in fade-in zoom-in-95 duration-500">
           {viewMode === 'charts' ? (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ChartCard title="Main Power">
-                <ReusableAreaChart
-                  data={timeSeriesData}
-                  dataKey="power"
-                  color="#00C853"
-                  unit="kW"
-                  yDomain={[0, 10]}
-                />
-              </ChartCard>
-              <ChartCard title="Temperature">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
+              {/* Row 1: Key Metrics */}
+              <div className="md:col-span-2 xl:col-span-2">
+                <ChartCard title="Main Output Power">
+                  <ReusableAreaChart
+                    data={timeSeriesData}
+                    dataKey="power"
+                    color="#00C853"
+                    unit="kW"
+                    yDomain={[0, 10]}
+                  />
+                </ChartCard>
+              </div>
+              <ChartCard title="Temperature Rack">
                 <ReusableBarChart
                   data={timeSeriesData}
                   dataKey="temp"
-                  color="#448AFF"
+                  color="#B3261E"
                   unit="°C"
                 />
               </ChartCard>
-              <ChartCard title="Power Exciter A">
+
+              {/* Row 2: Exciters */}
+              <ChartCard title="Exciter A Power">
                 <ReusableAreaChart
                   data={timeSeriesData}
                   dataKey="power"
-                  color="#00C853"
+                  color="#6750A4"
                   unit="%"
                   yDomain={[0, 100]}
                 />
               </ChartCard>
-              <ChartCard title="Power Exciter B">
+              <ChartCard title="Exciter B Power">
                 <ReusableAreaChart
                   data={timeSeriesData}
                   dataKey="power"
-                  color="#00C853"
+                  color="#6750A4"
                   unit="%"
                   yDomain={[0, 100]}
                 />
               </ChartCard>
-              <ChartCard title="SNR & IM">
+              <ChartCard title="Signal Quality (SNR & IM)">
                 <ReusableMultiBarChart
                   data={timeSeriesData}
                   keys={['snr', 'im']}
-                  colors={['#448AFF', '#00C853']}
+                  colors={['#2196F3', '#00C853']}
                   unit="dB"
                 />
               </ChartCard>
-              <ChartCard title="Pressure">
+
+              {/* Row 3: HPA Forward */}
+              <div className="md:col-span-2 xl:col-span-1">
+                <ChartCard title="Fwd Power HPA 1-3">
+                  <ReusableMultiBarChart
+                    data={timeSeriesData}
+                    keys={['hpa1', 'hpa2', 'hpa3']}
+                    colors={['#2196F3', '#00C853', '#FFC107']}
+                    unit="W"
+                    stackId="a"
+                  />
+                </ChartCard>
+              </div>
+              <div className="md:col-span-2 xl:col-span-1">
+                <ChartCard title="Fwd Power HPA 4-6">
+                  <ReusableMultiBarChart
+                    data={timeSeriesData}
+                    keys={['hpa1', 'hpa2', 'hpa3']}
+                    colors={['#2196F3', '#00C853', '#FFC107']}
+                    unit="W"
+                    stackId="b"
+                  />
+                </ChartCard>
+              </div>
+
+              {/* Row 4: Pressure & Reflect */}
+              <ChartCard title="Liquid Pressure">
                 <ReusableBarChart
                   data={timeSeriesData}
                   dataKey="press"
-                  color="#448AFF"
+                  color="#006391"
                   unit="L/min"
                 />
               </ChartCard>
-              <ChartCard title="Forward Power HPA1-HPA3">
-                <ReusableMultiBarChart
-                  data={timeSeriesData}
-                  keys={['hpa1', 'hpa2', 'hpa3']}
-                  colors={['#448AFF', '#00C853', '#FFC107']}
-                  unit="W"
-                />
-              </ChartCard>
-              <ChartCard title="Reflect Power HPA1-HPA3">
+              <ChartCard title="Reflect Power Total">
                 <ReusableAreaChart
                   data={timeSeriesData}
                   dataKey="power"
-                  color="#D32F2F"
-                  unit="W"
-                  yDomain={[0, 100]}
-                />
-              </ChartCard>
-              <ChartCard title="Forward Power HPA4-HPA6">
-                <ReusableMultiBarChart
-                  data={timeSeriesData}
-                  keys={['hpa1', 'hpa2', 'hpa3']}
-                  colors={['#448AFF', '#00C853', '#FFC107']}
-                  unit="W"
-                />
-              </ChartCard>
-              <ChartCard title="Reflect Power HPA4-HPA6">
-                <ReusableAreaChart
-                  data={timeSeriesData}
-                  dataKey="power"
-                  color="#D32F2F"
+                  color="#B3261E"
                   unit="W"
                   yDomain={[0, 100]}
                 />

@@ -21,15 +21,13 @@ import {
   Calendar,
   AlertTriangle,
 } from 'lucide-react';
-import { useState, ChangeEvent, useEffect } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { useUsers } from '@/hooks/tickets/useTrouble';
 
-// Interface Props disederhanakan (HistoryData dihapus karena sudah merge di TroubleFormValues)
 interface TroubleFormProps {
-  initialData?: any;
+  initialData?: any; // Menggunakan any sementara untuk mapping data masuk
   onSubmit: (data: TroubleFormValues) => void;
   isLoading?: boolean;
-  isEditMode?: boolean; // Opsional: untuk penanda eksplisit
 }
 
 export default function TroubleForm({
@@ -39,42 +37,27 @@ export default function TroubleForm({
 }: TroubleFormProps) {
   const { data: userList } = useUsers();
 
-  // State management Images
-  const [mainImages, setMainImages] = useState<string[]>(
-    initialData?.images || [],
-  );
-  // State untuk images saat update progress
-  const [updateImages, setUpdateImages] = useState<string[]>([]);
-
-  // State Pelapor Awal (Create Mode / Read Only di Edit)
-  const [reporters, setReporters] = useState<string[]>(
-    initialData?.reporters ||
-      (initialData?.assignedUser ? [initialData.assignedUser] : []),
-  );
-
-  // State Pelapor Update (Khusus Edit Mode)
-  const [updateReporters, setUpdateReporters] = useState<string[]>([]);
-
-  // State Input Manual (External)
+  // State UI (Hanya untuk toggle tampilan input external, bukan data form)
   const [isExternalInput, setIsExternalInput] = useState(false);
   const [externalName, setExternalName] = useState('');
   const [isUpdateExternalInput, setIsUpdateExternalInput] = useState(false);
   const [updateExternalName, setUpdateExternalName] = useState('');
 
-  // React hook form
+  // React Hook Form Setup
   const {
     register,
     handleSubmit,
     setValue,
+    watch, // Pengganti State lokal agar re-render saat data berubah
     trigger,
     formState: { errors },
-  } = useForm<TroubleFormValues>({
+  } = useForm({
     resolver: zodResolver(troubleSchema),
     defaultValues: {
       title: initialData?.title || '',
       siteId: initialData?.siteId || '',
       description: initialData?.description || '',
-      // Logic status: Jika data ada dan status 'open', ubah default ke 'process' agar user langsung update
+      // Jika edit mode & status open, otomatis set ke 'process'
       status: initialData
         ? initialData.status === 'open'
           ? 'process'
@@ -87,76 +70,84 @@ export default function TroubleForm({
       statusTx: initialData?.statusTx || '',
       duration: initialData?.duration || '',
       reporters: initialData?.reporters || [],
-      // Field Update / History (Sesuai Schema Baru)
+      // Field Update (History)
       updateDescription: '',
       updateReporters: [],
       updateImages: [],
     },
   });
 
-  // Sync state reporters awal ke form
-  useEffect(() => {
-    setValue('reporters', reporters);
-    if (reporters.length > 0 && !initialData) trigger('reporters');
-  }, [reporters, setValue, trigger, initialData]);
+  // WATCHERS: Menggantikan useState untuk render UI real-time
+  const watchedReporters = watch('reporters') || [];
+  const watchedUpdateReporters = watch('updateReporters') || [];
+  const watchedMainImages = watch('images') || [];
+  const watchedUpdateImages = watch('updateImages') || [];
 
-  // Sync state updateReporters ke form field 'updateReporters'
-  useEffect(() => {
-    setValue('updateReporters', updateReporters);
-    // Trigger validasi hanya jika ada isinya atau user sedang berinteraksi
-    if (updateReporters.length > 0) trigger('updateReporters');
-  }, [updateReporters, setValue, trigger]);
+  // --- HANDLERS (Menggunakan setValue RHF) ---
 
-  // Handler - Add Reporter Awal
+  // 1. Logic Pelapor Awal
   const handleAddReporter = (value: string) => {
     if (value === 'external') {
       setIsExternalInput(true);
       return;
     }
-    if (value && !reporters.includes(value)) {
-      setReporters([...reporters, value]);
+    if (value && !watchedReporters.includes(value)) {
+      setValue('reporters', [...watchedReporters, value], {
+        shouldValidate: true,
+      });
     }
   };
 
   const handleAddExternalReporter = () => {
     if (externalName.trim()) {
       const name = `${externalName} (Ext)`;
-      if (!reporters.includes(name)) setReporters([...reporters, name]);
+      if (!watchedReporters.includes(name)) {
+        setValue('reporters', [...watchedReporters, name], {
+          shouldValidate: true,
+        });
+      }
       setExternalName('');
       setIsExternalInput(false);
     }
   };
 
   const removeReporter = (index: number) => {
-    setReporters(reporters.filter((_, i) => i !== index));
+    const updated = watchedReporters.filter((_, i) => i !== index);
+    setValue('reporters', updated, { shouldValidate: true });
   };
 
-  // Handler - Add Reporter Update
+  // 2. Logic Pelapor Update
   const handleAddUpdateReporter = (value: string) => {
     if (value === 'external') {
       setIsUpdateExternalInput(true);
       return;
     }
-    if (value && !updateReporters.includes(value)) {
-      setUpdateReporters([...updateReporters, value]);
+    if (value && !watchedUpdateReporters.includes(value)) {
+      setValue('updateReporters', [...watchedUpdateReporters, value], {
+        shouldValidate: true,
+      });
     }
   };
 
   const handleAddUpdateExternalReporter = () => {
     if (updateExternalName.trim()) {
       const name = `${updateExternalName} (Ext)`;
-      if (!updateReporters.includes(name))
-        setUpdateReporters([...updateReporters, name]);
+      if (!watchedUpdateReporters.includes(name)) {
+        setValue('updateReporters', [...watchedUpdateReporters, name], {
+          shouldValidate: true,
+        });
+      }
       setUpdateExternalName('');
       setIsUpdateExternalInput(false);
     }
   };
 
   const removeUpdateReporter = (index: number) => {
-    setUpdateReporters(updateReporters.filter((_, i) => i !== index));
+    const updated = watchedUpdateReporters.filter((_, i) => i !== index);
+    setValue('updateReporters', updated, { shouldValidate: true });
   };
 
-  // Handler Images
+  // 3. Logic Images
   const handleFileSelect = (
     e: ChangeEvent<HTMLInputElement>,
     target: 'main' | 'update',
@@ -164,9 +155,11 @@ export default function TroubleForm({
     const files = e.target.files;
     if (!files) return;
 
-    const currentCount =
-      target === 'main' ? mainImages.length : updateImages.length;
-    if (files.length + currentCount > 5) return alert(`Maksimal 5 foto.`);
+    const currentImages =
+      target === 'main' ? watchedMainImages : watchedUpdateImages;
+
+    if (files.length + currentImages.length > 5)
+      return alert(`Maksimal 5 foto.`);
 
     const newImagesPromises: Promise<string>[] = [];
 
@@ -181,54 +174,23 @@ export default function TroubleForm({
     });
 
     Promise.all(newImagesPromises).then((base64Images) => {
-      if (target === 'main') {
-        const updated = [...mainImages, ...base64Images];
-        setMainImages(updated);
-        setValue('images', updated);
-      } else {
-        const updated = [...updateImages, ...base64Images];
-        setUpdateImages(updated);
-        setValue('updateImages', updated); // Set ke field schema updateImages
-      }
+      const fieldName = target === 'main' ? 'images' : 'updateImages';
+      const updatedList = [...currentImages, ...base64Images];
+      setValue(fieldName, updatedList, { shouldValidate: true });
     });
 
     e.target.value = '';
   };
 
   const removeImage = (index: number, target: 'main' | 'update') => {
-    if (target === 'main') {
-      const updated = mainImages.filter((_, i) => i !== index);
-      setMainImages(updated);
-      setValue('images', updated);
-    } else {
-      const updated = updateImages.filter((_, i) => i !== index);
-      setUpdateImages(updated);
-      setValue('updateImages', updated);
-    }
+    const fieldName = target === 'main' ? 'images' : 'updateImages';
+    const currentList =
+      target === 'main' ? watchedMainImages : watchedUpdateImages;
+    const updated = currentList.filter((_, i) => i !== index);
+    setValue(fieldName, updated, { shouldValidate: true });
   };
 
-  // Final Submit Handler
-  const onFormSubmit = (data: TroubleFormValues) => {
-    // Sinkronisasi data akhir sebelum dikirim
-    const finalData: TroubleFormValues = {
-      ...data,
-      // Pastikan images utama terkirim (untuk create) atau data lama (untuk update)
-      images: mainImages,
-      reporters: reporters,
-      // Field update disuplai dari state lokal ke dalam objek data utama
-      // Jika initialData ada (Edit Mode), masukkan data update
-      ...(initialData && {
-        updateImages: updateImages,
-        updateReporters: updateReporters,
-        // updateDescription sudah ada di 'data' dari register form
-      }),
-    };
-
-    // Kirim satu objek utuh, tidak perlu parameter history terpisah
-    onSubmit(finalData);
-  };
-
-  // M3 STYLE UTILS (TIDAK BERUBAH)
+  // --- STYLE UTILS (TIDAK BERUBAH) ---
   const inputClass = (error?: any) =>
     `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none ${
       error
@@ -239,6 +201,7 @@ export default function TroubleForm({
     'text-sm font-medium text-[#49454F] mb-2 block tracking-wide';
   const errorClass = 'text-xs text-[#B3261E] mt-1 ml-1 font-medium';
 
+  // --- SUB COMPONENTS (Helpers) ---
   const AttachmentSection = ({ images, target, readOnly = false }: any) => (
     <div className="space-y-2">
       <label className={labelClass}>
@@ -491,7 +454,7 @@ export default function TroubleForm({
   );
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8 pb-10">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-10">
       <div className="mb-6 pb-4 border-b border-[#CAC4D0] flex justify-between items-center">
         <h3 className="text-xl font-normal text-[#1D1B20] tracking-tight">
           Report Troubleticket
@@ -541,6 +504,26 @@ export default function TroubleForm({
             </div>
             {errors.title && (
               <p className={errorClass}>{errors.title.message as string}</p>
+            )}
+          </div>
+
+          {/* Deskripsi Tambahan */}
+          <div>
+            <label className={labelClass}>
+              Keterangan <span className="text-[#B3261E]">*</span>
+            </label>
+            <textarea
+              {...register('description')}
+              placeholder="Tulis keterangan lebih lanjut..."
+              rows={3}
+              className={
+                inputClass(errors.description) + ' resize-none text-sm'
+              }
+            />
+            {errors.description && (
+              <p className={errorClass}>
+                {errors.description.message as string}
+              </p>
             )}
           </div>
 
@@ -624,11 +607,13 @@ export default function TroubleForm({
               Pelapor Awal{' '}
               {!initialData && <span className="text-[#B3261E]">*</span>}
             </label>
+            {/* List Pelapor (Dibaca dari Watcher) */}
             <ReporterBadges
-              list={reporters}
+              list={watchedReporters}
               onRemove={removeReporter}
               readOnly={!!initialData}
             />
+            {/* Input untuk menambah (Hanya saat create) */}
             {!initialData && (
               <ReporterInput
                 isExternal={isExternalInput}
@@ -640,7 +625,7 @@ export default function TroubleForm({
                 error={errors.reporters?.message}
               />
             )}
-            {/* Fallback error display */}
+            {/* Error Message */}
             {errors.reporters && !!initialData && (
               <p className={errorClass}>{errors.reporters.message as string}</p>
             )}
@@ -649,7 +634,7 @@ export default function TroubleForm({
           {/* Jika Edit Mode, Show Lampiran Awal jadi Read Only */}
           {initialData && (
             <AttachmentSection
-              images={mainImages}
+              images={watchedMainImages}
               target="main"
               readOnly={true}
             />
@@ -667,16 +652,15 @@ export default function TroubleForm({
           {/* CREATE MODE: LAMPIRAN & TOMBOL DI KANAN */}
           {!initialData && (
             <>
-              <AttachmentSection images={mainImages} target="main" />
+              <AttachmentSection images={watchedMainImages} target="main" />
               <div className="pt-4 flex justify-end">
                 <SubmitButton />
               </div>
             </>
           )}
 
-          {/* EDIT MODE: FORM UPDATE (Sinkronisasi Field Schema Baru) */}
+          {/* EDIT MODE: FORM UPDATE */}
           {initialData && (
-            // M3 Surface Container: #F3EDF7 with larger radius
             <div className="bg-[#F3EDF7] p-6 rounded-[24px] space-y-6 animate-in slide-in-from-right-2 fade-in shadow-none border border-transparent">
               <div className="flex items-center gap-3 text-[#6750A4] pb-2 border-b border-[#E7E0EC]">
                 <History size={24} />
@@ -711,7 +695,7 @@ export default function TroubleForm({
                   <span className="text-[#B3261E]">*</span>
                 </label>
                 <ReporterBadges
-                  list={updateReporters}
+                  list={watchedUpdateReporters}
                   onRemove={removeUpdateReporter}
                 />
                 <ReporterInput
@@ -751,7 +735,7 @@ export default function TroubleForm({
                 )}
               </div>
 
-              <AttachmentSection images={updateImages} target="update" />
+              <AttachmentSection images={watchedUpdateImages} target="update" />
 
               <div className="pt-2">
                 <SubmitButton />
