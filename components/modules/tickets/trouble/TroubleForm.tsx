@@ -24,273 +24,150 @@ import {
 import { useState, ChangeEvent } from 'react';
 import { useUsers } from '@/hooks/tickets/useTrouble';
 
+// --- TYPE DEFINITIONS ---
+// Definisikan tipe untuk props sub-komponen agar tidak 'any'
+interface SubComponentProps {
+  readOnly?: boolean;
+  errors?: any; // Bisa diperbaiki dengan FieldErrors<TroubleFormValues> jika ingin lebih strict
+}
+
+interface AttachmentSectionProps extends SubComponentProps {
+  images: string[];
+  target: 'main' | 'update';
+  onRemove: (index: number, target: 'main' | 'update') => void;
+  onUpload: (
+    e: ChangeEvent<HTMLInputElement>,
+    target: 'main' | 'update',
+  ) => void;
+}
+
+interface ReporterBadgesProps extends SubComponentProps {
+  list: string[];
+  onRemove: (index: number) => void;
+}
+
+interface ReporterInputProps {
+  isExternal: boolean;
+  onAdd: (value: string) => void;
+  onAddExternal: () => void;
+  onCancelExternal: () => void;
+  externalValue: string;
+  setExternalValue: (val: string) => void;
+  error?: string;
+  userList?: any[]; // Sesuaikan dengan tipe userList dari hook Anda
+}
+
 interface TroubleFormProps {
-  initialData?: any; // Menggunakan any sementara untuk mapping data masuk
+  initialData?: Partial<TroubleFormValues> & { status?: string }; // Lebih aman daripada 'any'
   onSubmit: (data: TroubleFormValues) => void;
   isLoading?: boolean;
 }
 
-export default function TroubleForm({
-  initialData,
-  onSubmit,
-  isLoading,
-}: TroubleFormProps) {
-  const { data: userList } = useUsers();
+// --- SUB-COMPONENTS (DIPINDAHKAN KE LUAR) ---
 
-  // State UI (Hanya untuk toggle tampilan input external, bukan data form)
-  const [isExternalInput, setIsExternalInput] = useState(false);
-  const [externalName, setExternalName] = useState('');
-  const [isUpdateExternalInput, setIsUpdateExternalInput] = useState(false);
-  const [updateExternalName, setUpdateExternalName] = useState('');
-
-  // React Hook Form Setup
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch, // Pengganti State lokal agar re-render saat data berubah
-    trigger,
-    formState: { errors },
-  } = useForm<TroubleFormValues>({
-    resolver: zodResolver(troubleSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      siteId: initialData?.siteId || '',
-      description: initialData?.description || '',
-      // Jika edit mode & status open, otomatis set ke 'process'
-      status: initialData
-        ? initialData.status === 'open'
-          ? 'process'
-          : initialData.status
-        : 'open',
-      priority: initialData?.priority || 'Minor',
-      images: initialData?.images || [],
-      startTime: initialData?.startTime || '',
-      runHours: initialData?.runHours || '',
-      statusTx: initialData?.statusTx || '',
-      duration: initialData?.duration || '',
-      reporters: initialData?.reporters || [],
-      // Field Update (History)
-      updateDescription: '',
-      updateReporters: [],
-      updateImages: [],
-    },
-  });
-
-  // Watchers untuk render UI real-time seperti useState
-  const watchedReporters = watch('reporters') || [];
-  const watchedUpdateReporters = watch('updateReporters') || [];
-  const watchedMainImages = watch('images') || [];
-  const watchedUpdateImages = watch('updateImages') || [];
-
-  // Logic Pelapor Awal
-  const handleAddReporter = (value: string) => {
-    if (value === 'external') {
-      setIsExternalInput(true);
-      return;
-    }
-    if (value && !watchedReporters.includes(value)) {
-      setValue('reporters', [...watchedReporters, value], {
-        shouldValidate: true,
-      });
-    }
-  };
-
-  const handleAddExternalReporter = () => {
-    if (externalName.trim()) {
-      const name = `${externalName} (Ext)`;
-      if (!watchedReporters.includes(name)) {
-        setValue('reporters', [...watchedReporters, name], {
-          shouldValidate: true,
-        });
-      }
-      setExternalName('');
-      setIsExternalInput(false);
-    }
-  };
-
-  const removeReporter = (index: number) => {
-    const updated = watchedReporters.filter((_, i) => i !== index);
-    setValue('reporters', updated, { shouldValidate: true });
-  };
-
-  // Logic Pelapor Update
-  const handleAddUpdateReporter = (value: string) => {
-    if (value === 'external') {
-      setIsUpdateExternalInput(true);
-      return;
-    }
-    if (value && !watchedUpdateReporters.includes(value)) {
-      setValue('updateReporters', [...watchedUpdateReporters, value], {
-        shouldValidate: true,
-      });
-    }
-  };
-
-  const handleAddUpdateExternalReporter = () => {
-    if (updateExternalName.trim()) {
-      const name = `${updateExternalName} (Ext)`;
-      if (!watchedUpdateReporters.includes(name)) {
-        setValue('updateReporters', [...watchedUpdateReporters, name], {
-          shouldValidate: true,
-        });
-      }
-      setUpdateExternalName('');
-      setIsUpdateExternalInput(false);
-    }
-  };
-
-  const removeUpdateReporter = (index: number) => {
-    const updated = watchedUpdateReporters.filter((_, i) => i !== index);
-    setValue('updateReporters', updated, { shouldValidate: true });
-  };
-
-  // Logic Images
-  const handleFileSelect = (
-    e: ChangeEvent<HTMLInputElement>,
-    target: 'main' | 'update',
-  ) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const currentImages =
-      target === 'main' ? watchedMainImages : watchedUpdateImages;
-
-    if (files.length + currentImages.length > 5)
-      return alert(`Maksimal 5 foto.`);
-
-    const newImagesPromises: Promise<string>[] = [];
-
-    Array.from(files).forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) return alert('File Max 5MB');
-      const promise = new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-      newImagesPromises.push(promise);
-    });
-
-    Promise.all(newImagesPromises).then((base64Images) => {
-      const fieldName = target === 'main' ? 'images' : 'updateImages';
-      const updatedList = [...currentImages, ...base64Images];
-      setValue(fieldName, updatedList, { shouldValidate: true });
-    });
-
-    e.target.value = '';
-  };
-
-  const removeImage = (index: number, target: 'main' | 'update') => {
-    const fieldName = target === 'main' ? 'images' : 'updateImages';
-    const currentList =
-      target === 'main' ? watchedMainImages : watchedUpdateImages;
-    const updated = currentList.filter((_, i) => i !== index);
-    setValue(fieldName, updated, { shouldValidate: true });
-  };
-
-  // --- STYLE UTILS (TIDAK BERUBAH) ---
-  const inputClass = (error?: any) =>
-    `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none ${
-      error
-        ? 'border-[#B3261E] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E] bg-red-50/10'
-        : 'border-[#79747E] bg-white hover:border-[#49454F] focus:border-[#6750A4] focus:ring-1 focus:ring-[#6750A4]'
-    }`;
-  const labelClass =
-    'text-sm font-medium text-[#49454F] mb-2 block tracking-wide';
-  const errorClass = 'text-xs text-[#B3261E] mt-1 ml-1 font-medium';
-
-  const AttachmentSection = ({ images, target, readOnly = false }: any) => (
-    <div className="space-y-2">
-      <label className={labelClass}>
-        {target === 'main' ? 'Lampiran Awal' : 'Foto Update'}
-        <span className="text-xs text-[#79747E] ml-2 font-normal">
-          ({images.length}/5)
-        </span>
-      </label>
-      {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-2">
-          {images.map((img: string, idx: number) => (
-            <div
-              key={idx}
-              className="relative aspect-square rounded-[12px] overflow-hidden border border-[#CAC4D0] group bg-white"
-            >
-              <img
-                src={img}
-                alt="preview"
-                className="w-full h-full object-cover"
-              />
-              {!readOnly && (
-                <button
-                  type="button"
-                  onClick={() => removeImage(idx, target)}
-                  className="absolute top-1 right-1 bg-white/90 p-1.5 rounded-full text-[#B3261E] hover:bg-[#F2B8B5] transition-colors shadow-sm"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      {!readOnly && images.length < 5 && (
-        <label className="flex flex-col items-center justify-center w-full h-[100px] border border-dashed border-[#79747E] rounded-[12px] cursor-pointer hover:bg-[#F3EDF7] transition-all bg-[#F3EDF7]/30">
-          <div className="flex flex-col items-center justify-center py-2 text-[#6750A4]">
-            <ImageIcon size={24} className="mb-1" />
-            <p className="text-xs font-medium">Upload Foto</p>
+const AttachmentSection = ({
+  images,
+  target,
+  readOnly = false,
+  onRemove,
+  onUpload,
+}: AttachmentSectionProps) => (
+  <div className="space-y-2">
+    <label className="text-sm font-medium text-[#49454F] mb-2 block tracking-wide">
+      {target === 'main' ? 'Lampiran Awal' : 'Foto Update'}
+      <span className="text-xs text-[#79747E] ml-2 font-normal">
+        ({images.length}/5)
+      </span>
+    </label>
+    {images.length > 0 && (
+      <div className="grid grid-cols-3 gap-3 mb-2">
+        {images.map((img, idx) => (
+          <div
+            key={idx}
+            className="relative aspect-square rounded-[12px] overflow-hidden border border-[#CAC4D0] group bg-white"
+          >
+            <img
+              src={img}
+              alt="preview"
+              className="w-full h-full object-cover"
+            />
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => onRemove(idx, target)}
+                className="absolute top-1 right-1 bg-white/90 p-1.5 rounded-full text-[#B3261E] hover:bg-[#F2B8B5] transition-colors shadow-sm"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-          <input
-            type="file"
-            className="hidden"
-            accept="image/*"
-            multiple
-            onChange={(e) => handleFileSelect(e, target)}
-          />
-        </label>
-      )}
-    </div>
-  );
+        ))}
+      </div>
+    )}
+    {!readOnly && images.length < 5 && (
+      <label className="flex flex-col items-center justify-center w-full h-[100px] border border-dashed border-[#79747E] rounded-[12px] cursor-pointer hover:bg-[#F3EDF7] transition-all bg-[#F3EDF7]/30">
+        <div className="flex flex-col items-center justify-center py-2 text-[#6750A4]">
+          <ImageIcon size={24} className="mb-1" />
+          <p className="text-xs font-medium">Upload Foto</p>
+        </div>
+        <input
+          type="file"
+          className="hidden"
+          accept="image/*"
+          multiple
+          onChange={(e) => onUpload(e, target)}
+        />
+      </label>
+    )}
+  </div>
+);
 
-  const ReporterBadges = ({ list, onRemove, readOnly }: any) => (
-    <div className="flex flex-wrap gap-2 mb-3">
-      {list.map((rep: string, idx: number) => (
-        <span
-          key={idx}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-sm font-medium border transition-colors ${
-            readOnly
-              ? 'bg-[#E7E0EC] text-[#49454F] border-[#CAC4D0]'
-              : 'bg-[#E8DEF8] text-[#1D192B] border-[#E8DEF8] hover:shadow-sm'
-          }`}
-        >
-          <User size={14} />
-          {rep}
-          {!readOnly && (
-            <button
-              type="button"
-              onClick={() => onRemove(idx)}
-              className="text-[#1D192B] hover:text-[#B3261E] transition-colors rounded-full p-0.5"
-            >
-              <X size={14} strokeWidth={2.5} />
-            </button>
-          )}
-        </span>
-      ))}
-      {readOnly && list.length === 0 && (
-        <span className="text-sm text-[#79747E] italic py-1">
-          - Tidak ada data -
-        </span>
-      )}
-    </div>
-  );
+const ReporterBadges = ({ list, onRemove, readOnly }: ReporterBadgesProps) => (
+  <div className="flex flex-wrap gap-2 mb-3">
+    {list.map((rep, idx) => (
+      <span
+        key={idx}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-sm font-medium border transition-colors ${
+          readOnly
+            ? 'bg-[#E7E0EC] text-[#49454F] border-[#CAC4D0]'
+            : 'bg-[#E8DEF8] text-[#1D192B] border-[#E8DEF8] hover:shadow-sm'
+        }`}
+      >
+        <User size={14} />
+        {rep}
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => onRemove(idx)}
+            className="text-[#1D192B] hover:text-[#B3261E] transition-colors rounded-full p-0.5"
+          >
+            <X size={14} strokeWidth={2.5} />
+          </button>
+        )}
+      </span>
+    ))}
+    {readOnly && list.length === 0 && (
+      <span className="text-sm text-[#79747E] italic py-1">
+        - Tidak ada data -
+      </span>
+    )}
+  </div>
+);
 
-  const ReporterInput = ({
-    isExternal,
-    onAdd,
-    onAddExternal,
-    onCancelExternal,
-    externalValue,
-    setExternalValue,
-    error,
-  }: any) => (
+const ReporterInput = ({
+  isExternal,
+  onAdd,
+  onAddExternal,
+  onCancelExternal,
+  externalValue,
+  setExternalValue,
+  error,
+  userList,
+}: ReporterInputProps) => {
+  const inputClass = (err?: any) =>
+    `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none ${err ? 'border-[#B3261E] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E] bg-red-50/10' : 'border-[#79747E] bg-white hover:border-[#49454F] focus:border-[#6750A4] focus:ring-1 focus:ring-[#6750A4]'}`;
+
+  return (
     <div className="space-y-1">
       {!isExternal ? (
         <div className="relative group">
@@ -325,7 +202,7 @@ export default function TroubleForm({
             autoFocus
             placeholder="Nama teknisi..."
             value={externalValue}
-            onChange={(e: any) => setExternalValue(e.target.value)}
+            onChange={(e) => setExternalValue(e.target.value)}
             className={inputClass(error)}
           />
           <button
@@ -344,17 +221,181 @@ export default function TroubleForm({
           </button>
         </div>
       )}
-      {error && <p className={errorClass}>{error}</p>}
+      {error && (
+        <p className="text-xs text-[#B3261E] mt-1 ml-1 font-medium">{error}</p>
+      )}
     </div>
   );
+};
 
-  const TechnicalFields = ({ readOnly }: { readOnly: boolean }) => (
+// --- MAIN COMPONENT ---
+
+export default function TroubleForm({
+  initialData,
+  onSubmit,
+  isLoading,
+}: TroubleFormProps) {
+  const { data: userList } = useUsers();
+
+  // Helper Classes (Tetap di sini tidak apa-apa karena hanya string, atau pindah ke luar juga boleh)
+  const inputClass = (error?: any) =>
+    `w-full px-4 py-3 rounded-[12px] border text-[#1D1B20] outline-none transition-all placeholder:text-[#49454F]/50 appearance-none ${error ? 'border-[#B3261E] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E] bg-red-50/10' : 'border-[#79747E] bg-white hover:border-[#49454F] focus:border-[#6750A4] focus:ring-1 focus:ring-[#6750A4]'}`;
+  const labelClass =
+    'text-sm font-medium text-[#49454F] mb-2 block tracking-wide';
+  const errorClass = 'text-xs text-[#B3261E] mt-1 ml-1 font-medium';
+
+  const [isExternalInput, setIsExternalInput] = useState(false);
+  const [externalName, setExternalName] = useState('');
+  const [isUpdateExternalInput, setIsUpdateExternalInput] = useState(false);
+  const [updateExternalName, setUpdateExternalName] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<TroubleFormValues>({
+    resolver: zodResolver(troubleSchema),
+    defaultValues: {
+      title: initialData?.title || '',
+      siteId: initialData?.siteId || '',
+      description: initialData?.description || '',
+      status:
+        ((initialData?.status === 'open'
+          ? 'process'
+          : initialData?.status) as any) || 'open',
+      priority: initialData?.priority || 'Minor',
+      images: initialData?.images || [],
+      startTime: initialData?.startTime || '',
+      runHours: initialData?.runHours || '',
+      statusTx: initialData?.statusTx || '',
+      duration: initialData?.duration || '',
+      reporters: initialData?.reporters || [],
+      updateDescription: '',
+      updateReporters: [],
+      updateImages: [],
+    },
+  });
+
+  const watchedReporters = watch('reporters') || [];
+  const watchedUpdateReporters = watch('updateReporters') || [];
+  const watchedMainImages = watch('images') || [];
+  const watchedUpdateImages = watch('updateImages') || [];
+
+  // Logic handlers (Sama seperti sebelumnya)
+  const handleAddReporter = (value: string) => {
+    if (value === 'external') {
+      setIsExternalInput(true);
+      return;
+    }
+    if (value && !watchedReporters.includes(value))
+      setValue('reporters', [...watchedReporters, value], {
+        shouldValidate: true,
+      });
+  };
+
+  const handleAddExternalReporter = () => {
+    if (externalName.trim()) {
+      const name = `${externalName} (Ext)`;
+      if (!watchedReporters.includes(name))
+        setValue('reporters', [...watchedReporters, name], {
+          shouldValidate: true,
+        });
+      setExternalName('');
+      setIsExternalInput(false);
+    }
+  };
+
+  const removeReporter = (index: number) => {
+    setValue(
+      'reporters',
+      watchedReporters.filter((_, i) => i !== index),
+      { shouldValidate: true },
+    );
+  };
+
+  const handleAddUpdateReporter = (value: string) => {
+    if (value === 'external') {
+      setIsUpdateExternalInput(true);
+      return;
+    }
+    if (value && !watchedUpdateReporters.includes(value))
+      setValue('updateReporters', [...watchedUpdateReporters, value], {
+        shouldValidate: true,
+      });
+  };
+
+  const handleAddUpdateExternalReporter = () => {
+    if (updateExternalName.trim()) {
+      const name = `${updateExternalName} (Ext)`;
+      if (!watchedUpdateReporters.includes(name))
+        setValue('updateReporters', [...watchedUpdateReporters, name], {
+          shouldValidate: true,
+        });
+      setUpdateExternalName('');
+      setIsUpdateExternalInput(false);
+    }
+  };
+
+  const removeUpdateReporter = (index: number) => {
+    setValue(
+      'updateReporters',
+      watchedUpdateReporters.filter((_, i) => i !== index),
+      { shouldValidate: true },
+    );
+  };
+
+  const handleFileSelect = (
+    e: ChangeEvent<HTMLInputElement>,
+    target: 'main' | 'update',
+  ) => {
+    const files = e.target.files;
+    if (!files) return;
+    const currentImages =
+      target === 'main' ? watchedMainImages : watchedUpdateImages;
+
+    if (files.length + currentImages.length > 5)
+      return alert(`Maksimal 5 foto.`);
+
+    const newImagesPromises: Promise<string>[] = [];
+    Array.from(files).forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) return alert('File Max 5MB');
+      const promise = new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      newImagesPromises.push(promise);
+    });
+
+    Promise.all(newImagesPromises).then((base64Images) => {
+      const fieldName = target === 'main' ? 'images' : 'updateImages';
+      setValue(fieldName, [...currentImages, ...base64Images], {
+        shouldValidate: true,
+      });
+    });
+    e.target.value = '';
+  };
+
+  const removeImage = (index: number, target: 'main' | 'update') => {
+    const fieldName = target === 'main' ? 'images' : 'updateImages';
+    const currentList =
+      target === 'main' ? watchedMainImages : watchedUpdateImages;
+    setValue(
+      fieldName,
+      currentList.filter((_, i) => i !== index),
+      { shouldValidate: true },
+    );
+  };
+
+  // Technical Fields component juga sebaiknya dipisah, tapi jika ingin di dalam,
+  // pastikan dia tidak re-render berat. Di sini saya pindahkan ke dalam render function langsung
+  // agar tidak jadi komponen terpisah yang didefinisikan ulang, melainkan hanya JSX biasa.
+  const renderTechnicalFields = (readOnly: boolean) => (
     <div
-      className={`space-y-6 ${
-        readOnly ? 'opacity-70 pointer-events-none grayscale-[0.5]' : ''
-      }`}
+      className={`space-y-6 ${readOnly ? 'opacity-70 pointer-events-none grayscale-[0.5]' : ''}`}
     >
-      {/* Run Hours */}
       <div>
         <label className={labelClass}>Run Hours</label>
         <div className="relative">
@@ -375,7 +416,6 @@ export default function TroubleForm({
           <p className={errorClass}>{errors.runHours.message as string}</p>
         )}
       </div>
-      {/* Status TX */}
       <div>
         <label className={labelClass}>Status TX</label>
         <div className="relative">
@@ -400,7 +440,6 @@ export default function TroubleForm({
           <p className={errorClass}>{errors.statusTx.message as string}</p>
         )}
       </div>
-      {/* Duration */}
       <div>
         <label className={labelClass}>Durasi TX-OFF</label>
         <div className="relative">
@@ -424,45 +463,16 @@ export default function TroubleForm({
     </div>
   );
 
-  const SubmitButton = () => (
-    <button
-      type="submit"
-      disabled={isLoading}
-      className={`flex items-center justify-center gap-2 py-3 px-8 rounded-full font-medium text-sm tracking-wide shadow-sm hover:shadow-md transition-all active:scale-[0.98] ${
-        isLoading
-          ? 'bg-[#E7E0EC] text-[#1D192B] cursor-not-allowed'
-          : 'bg-[#6750A4] text-white hover:bg-[#6750A4]/90'
-      } ${
-        initialData ? 'w-full' : 'w-full md:w-auto'
-      } disabled:bg-[#1D1B20]/10 disabled:text-[#1D1B20]/40 disabled:shadow-none `}
-    >
-      {isLoading ? (
-        <Loader2 className="animate-spin" size={20} />
-      ) : initialData ? (
-        <>
-          <Save size={18} /> Simpan & Update
-        </>
-      ) : (
-        <>
-          <Send size={18} /> Kirim Laporan
-        </>
-      )}
-    </button>
-  );
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-10">
+      {/* HEADER */}
       <div className="mb-6 pb-4 border-b border-[#CAC4D0] flex justify-between items-center">
         <h3 className="text-xl font-normal text-[#1D1B20] tracking-tight">
           Report Troubleticket
         </h3>
         {initialData && (
           <span
-            className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm ${
-              initialData.status === 'open'
-                ? 'bg-[#E8DEF8] text-[#1D192B] border-[#E8DEF8]'
-                : 'bg-[#FFD8E4] text-[#31111D] border-[#FFD8E4]'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm ${initialData.status === 'open' ? 'bg-[#E8DEF8] text-[#1D192B] border-[#E8DEF8]' : 'bg-[#FFD8E4] text-[#31111D] border-[#FFD8E4]'}`}
           >
             {initialData.status}
           </span>
@@ -470,12 +480,10 @@ export default function TroubleForm({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+        {/* KOLOM KIRI */}
         <div
-          className={`space-y-6 ${
-            initialData ? 'opacity-80 pointer-events-none select-none' : ''
-          }`}
+          className={`space-y-6 ${initialData ? 'opacity-80 pointer-events-none select-none' : ''}`}
         >
-          {/* Title */}
           <div>
             <label className={labelClass}>
               Title {!initialData && <span className="text-[#B3261E]">*</span>}
@@ -494,9 +502,10 @@ export default function TroubleForm({
                 <option value="Lainnya">Lainnya...</option>
               </select>
               {!initialData && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#79747E]">
-                  <AlertTriangle size={20} />
-                </div>
+                <AlertTriangle
+                  size={20}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#79747E]"
+                />
               )}
             </div>
             {errors.title && (
@@ -504,14 +513,13 @@ export default function TroubleForm({
             )}
           </div>
 
-          {/* Deskripsi Tambahan */}
           <div>
             <label className={labelClass}>
               Keterangan <span className="text-[#B3261E]">*</span>
             </label>
             <textarea
               {...register('description')}
-              placeholder="Tulis keterangan lebih lanjut..."
+              placeholder="Tulis keterangan..."
               rows={3}
               className={
                 inputClass(errors.description) + ' resize-none text-sm'
@@ -524,7 +532,6 @@ export default function TroubleForm({
             )}
           </div>
 
-          {/* Site ID */}
           <div>
             <label className={labelClass}>
               Site ID{' '}
@@ -533,7 +540,7 @@ export default function TroubleForm({
             <div className="relative">
               <input
                 {...register('siteId')}
-                placeholder="Contoh: BDO001"
+                placeholder="BDO001"
                 disabled={!!initialData}
                 className={inputClass(errors.siteId)}
               />
@@ -549,7 +556,6 @@ export default function TroubleForm({
             )}
           </div>
 
-          {/* Priority */}
           <div>
             <label className={labelClass}>Priority</label>
             <div className="relative">
@@ -563,9 +569,10 @@ export default function TroubleForm({
                 <option value="Minor">Minor</option>
               </select>
               {!initialData && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#79747E]">
-                  <AlertCircle size={20} />
-                </div>
+                <AlertCircle
+                  className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#79747E]"
+                  size={20}
+                />
               )}
             </div>
             {errors.priority && (
@@ -573,7 +580,6 @@ export default function TroubleForm({
             )}
           </div>
 
-          {/* Start Time */}
           <div>
             <label className={labelClass}>
               Start Time{' '}
@@ -598,19 +604,16 @@ export default function TroubleForm({
             )}
           </div>
 
-          {/* Reporters */}
           <div>
             <label className={labelClass}>
               Pelapor Awal{' '}
               {!initialData && <span className="text-[#B3261E]">*</span>}
             </label>
-            {/* List Pelapor (Dibaca dari Watcher) */}
             <ReporterBadges
               list={watchedReporters}
               onRemove={removeReporter}
               readOnly={!!initialData}
             />
-            {/* Input untuk menambah (Hanya saat create) */}
             {!initialData && (
               <ReporterInput
                 isExternal={isExternalInput}
@@ -619,44 +622,58 @@ export default function TroubleForm({
                 onCancelExternal={() => setIsExternalInput(false)}
                 externalValue={externalName}
                 setExternalValue={setExternalName}
-                error={errors.reporters?.message}
+                error={errors.reporters?.message as string}
+                userList={userList}
               />
             )}
-            {/* Error Message */}
             {errors.reporters && !!initialData && (
               <p className={errorClass}>{errors.reporters.message as string}</p>
             )}
           </div>
 
-          {/* Jika Edit Mode, Show Lampiran Awal jadi Read Only */}
           {initialData && (
             <AttachmentSection
               images={watchedMainImages}
               target="main"
               readOnly={true}
+              onRemove={removeImage}
+              onUpload={handleFileSelect}
             />
           )}
 
-          {/* Jika edit mode, technical field ke kiri */}
-          {initialData && <TechnicalFields readOnly={true} />}
+          {initialData && renderTechnicalFields(true)}
         </div>
 
-        {/* Kolom kanan*/}
+        {/* KOLOM KANAN */}
         <div className="space-y-6">
-          {/* Create mode technical field di kanan*/}
-          {!initialData && <TechnicalFields readOnly={false} />}
+          {!initialData && renderTechnicalFields(false)}
 
-          {/* Create mode, lampiran dan tombol di kanan */}
           {!initialData && (
             <>
-              <AttachmentSection images={watchedMainImages} target="main" />
+              <AttachmentSection
+                images={watchedMainImages}
+                target="main"
+                onRemove={removeImage}
+                onUpload={handleFileSelect}
+              />
               <div className="pt-4 flex justify-end">
-                <SubmitButton />
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`flex items-center justify-center gap-2 py-3 px-8 rounded-full font-medium text-sm tracking-wide shadow-sm hover:shadow-md transition-all active:scale-[0.98] ${isLoading ? 'bg-[#E7E0EC] text-[#1D192B] cursor-not-allowed' : 'bg-[#6750A4] text-white hover:bg-[#6750A4]/90'}`}
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    <>
+                      <Send size={18} /> Kirim Laporan
+                    </>
+                  )}
+                </button>
               </div>
             </>
           )}
 
-          {/* Edit mode, form update */}
           {initialData && (
             <div className="bg-[#F3EDF7] p-6 rounded-[24px] space-y-6 animate-in slide-in-from-right-2 fade-in shadow-none border border-transparent">
               <div className="flex items-center gap-3 text-[#6750A4] pb-2 border-b border-[#E7E0EC]">
@@ -666,7 +683,6 @@ export default function TroubleForm({
                 </h3>
               </div>
 
-              {/* Status Update Field */}
               <div>
                 <label className={labelClass}>
                   Update Status <span className="text-[#B3261E]">*</span>
@@ -685,7 +701,6 @@ export default function TroubleForm({
                 )}
               </div>
 
-              {/* Teknisi Update Field (updateReporters) */}
               <div>
                 <label className={labelClass}>
                   Teknisi / Pelapor Update{' '}
@@ -702,23 +717,18 @@ export default function TroubleForm({
                   onCancelExternal={() => setIsUpdateExternalInput(false)}
                   externalValue={updateExternalName}
                   setExternalValue={setUpdateExternalName}
-                  error={errors.updateReporters?.message}
+                  error={errors.updateReporters?.message as string}
+                  userList={userList}
                 />
-                {errors.updateReporters && (
-                  <p className={errorClass}>
-                    {errors.updateReporters.message as string}
-                  </p>
-                )}
               </div>
 
-              {/* Description / Note Field (updateDescription) */}
               <div>
                 <label className={labelClass}>
                   Catatan Pengerjaan <span className="text-[#B3261E]">*</span>
                 </label>
                 <textarea
                   {...register('updateDescription')}
-                  placeholder="Deskripsikan progress pengerjaan..."
+                  placeholder="Deskripsikan progress..."
                   rows={3}
                   className={
                     inputClass(errors.updateDescription) +
@@ -732,10 +742,27 @@ export default function TroubleForm({
                 )}
               </div>
 
-              <AttachmentSection images={watchedUpdateImages} target="update" />
+              <AttachmentSection
+                images={watchedUpdateImages}
+                target="update"
+                onRemove={removeImage}
+                onUpload={handleFileSelect}
+              />
 
               <div className="pt-2">
-                <SubmitButton />
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full flex items-center justify-center gap-2 py-3 px-8 rounded-full font-medium text-sm tracking-wide shadow-sm hover:shadow-md transition-all active:scale-[0.98] ${isLoading ? 'bg-[#E7E0EC] text-[#1D192B] cursor-not-allowed' : 'bg-[#6750A4] text-white hover:bg-[#6750A4]/90'}`}
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    <>
+                      <Save size={18} /> Simpan & Update
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}
